@@ -1,9 +1,11 @@
 <template>
-  <div>Hello</div>
+  <div>
+    <FileInput />
+  </div>
 </template>
 
 <script setup lang="ts">
-// pass
+import FileInput from '@/components/FileInput.vue';
 </script>
 
 <style scoped></style>
