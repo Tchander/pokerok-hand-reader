@@ -5,18 +5,27 @@
 </template>
 
 <script setup lang="ts">
+import { useCountersStore } from '@/stores/counters';
 import { handHandler } from '@/parser/hand';
 import { startsWith } from '@/utils/index.ts';
 
-function onInputChange(event: Event) {
+const countersStore = useCountersStore();
+
+async function onInputChange(event: Event) {
   const target = event.target as HTMLInputElement;
 
   const files = target.files;
 
   if (!files) return;
 
-  for (const file of files) {
-    readFile(file);
+  try {
+    await countersStore.openCountersDatabase();
+
+    for (const file of files) {
+      readFile(file);
+    }
+  } catch (error) {
+    console.error(`Ошибка ${error} при открытии базы`);
   }
 }
 
@@ -24,7 +33,7 @@ function readFile(file: File) {
   const reader = new FileReader();
 
   // Обработка завершения чтения файла
-  reader.onload = function (event: ProgressEvent<FileReader>) {
+  reader.onload = async function (event: ProgressEvent<FileReader>) {
     const content = event.target?.result as string | null; // Получаем содержимое файла
 
     if (!content) return;
@@ -44,7 +53,7 @@ function readFile(file: File) {
         handCounter++;
 
         // Обработка руки
-        handHandler(currentHand);
+        await handHandler(currentHand);
         currentHand = [];
         currentHand.push(line);
       } else {
@@ -52,7 +61,7 @@ function readFile(file: File) {
       }
     }
 
-    console.log(handCounter);
+    await countersStore.updateNumberOfHands(handCounter);
   }
 
   // Чтение файла как текста

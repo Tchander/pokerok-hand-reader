@@ -1,3 +1,4 @@
+import { useCountersStore } from '@/stores/counters';
 import { KEY_WORDS } from '@/enums/parser';
 import { getArrayFromString, startsWith } from '@/utils';
 import { getBlinds, getTableTypeAndButtonSeat } from '@/utils/parser';
@@ -38,8 +39,10 @@ export function setButtonSeat(hand: PokerHand, buttonSeat: number) {
   hand.buttonSeat = buttonSeat;
 }
 
-export function handHandler(hand: string[]) {
+export async function handHandler(hand: string[]) {
   const pokerHand = resetPokerHand();
+
+  const countersStore = useCountersStore();
 
   for (const str of hand) {
     if (startsWith(str, KEY_WORDS.POKER_HAND)) {
@@ -53,11 +56,8 @@ export function handHandler(hand: string[]) {
       const tempArray = getArrayFromString(str, ' ');
       const { tableType, buttonSeat } = getTableTypeAndButtonSeat(tempArray);
 
-      console.log(str);
-      console.log(tableType, buttonSeat);
       setTableType(pokerHand, tableType);
       setButtonSeat(pokerHand, buttonSeat);
-      console.log(pokerHand);
     }
   }
 }
