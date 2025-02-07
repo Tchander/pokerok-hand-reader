@@ -4,6 +4,7 @@ export enum KEY_WORDS {
   POKER_HAND = 'Poker Hand',
   TABLE = 'Table',
   SEAT = 'Seat',
+  IN_CHIPS = 'in chips',
   POSTS_SMALL_BLIND = 'posts small blind',
   POSTS_BIG_BLIND = 'posts big blind',
   STRADDLE = 'straddle',
@@ -28,4 +29,5 @@ export enum KEY_WORDS {
   TAX = 'Tax',
 
   BOARD = 'BOARD',
+
 }

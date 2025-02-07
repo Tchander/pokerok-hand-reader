@@ -1,9 +1,8 @@
-import { useCountersStore } from '@/stores/counters';
+import { setBlinds, setButtonSeat, setMaxNumberOfPlayers, setTableType } from './setParams';
 import { KEY_WORDS } from '@/enums/parser';
 import { getArrayFromString, startsWith } from '@/utils';
-import { getBlinds, getTableTypeAndButtonSeat } from '@/utils/parser';
-import type { Blinds, PokerHand } from '@/types';
-import type { TableType } from '@/enums/pokerType';
+import { getBlinds, getPlayersInfo, getTableTypeAndButtonSeat, setInitPot } from '@/utils/parser';
+import type { PokerHand } from '@/types';
 
 const defaultPokerHand: PokerHand = {
   sizeOfSB: 0,
@@ -26,24 +25,8 @@ export function resetPokerHand() {
   return structuredClone(defaultPokerHand);
 }
 
-export function setBlinds(hand: PokerHand, blinds: Blinds) {
-  hand.sizeOfSB = blinds.sb;
-  hand.sizeOfBB = blinds.bb;
-}
-
-export function setTableType(hand: PokerHand, tableType: TableType) {
-  hand.tableType = tableType;
-}
-
-export function setButtonSeat(hand: PokerHand, buttonSeat: number) {
-  hand.buttonSeat = buttonSeat;
-}
-
 export async function handHandler(hand: string[]) {
-  console.log(hand);
   const pokerHand = resetPokerHand();
-
-  const countersStore = useCountersStore();
 
   for (const str of hand) {
     if (startsWith(str, KEY_WORDS.POKER_HAND)) {
@@ -54,11 +37,43 @@ export async function handHandler(hand: string[]) {
     }
 
     if (startsWith(str, KEY_WORDS.TABLE)) {
-      const tempArray = getArrayFromString(str, ' ');
-      const { tableType, buttonSeat } = getTableTypeAndButtonSeat(tempArray);
+      const { tableType, buttonSeat } = getTableTypeAndButtonSeat(str);
 
       setTableType(pokerHand, tableType);
       setButtonSeat(pokerHand, buttonSeat);
+      setMaxNumberOfPlayers(pokerHand, tableType);
+    }
+
+    /* *** Set players data *** */
+    if (startsWith(str, KEY_WORDS.SEAT) && str.includes(KEY_WORDS.IN_CHIPS)) {
+      const player = getPlayersInfo(str, pokerHand.buttonSeat, pokerHand.sizeOfBB);
+      pokerHand.players.push(player);
+    }
+
+    if (str.includes(KEY_WORDS.POSTS_SMALL_BLIND)) {
+      const player = setInitPot(str, pokerHand);
+
+      if (player) {
+        pokerHand.potInChips += pokerHand.sizeOfSB;
+        pokerHand.potInBB += pokerHand.sizeOfSB / pokerHand.sizeOfBB;
+
+        player.moneyInPotInChips += pokerHand.sizeOfSB;
+        player.moneyInPotInBB += pokerHand.sizeOfSB / pokerHand.sizeOfBB;
+      }
+    }
+
+    if (str.includes(KEY_WORDS.POSTS_BIG_BLIND)) {
+      const player = setInitPot(str, pokerHand);
+
+      if (player) {
+        pokerHand.potInChips += pokerHand.sizeOfBB;
+        pokerHand.potInBB += 1;
+
+        player.moneyInPotInChips += pokerHand.sizeOfBB;
+        player.moneyInPotInBB += 1;
+      }
     }
   }
+
+  console.log(pokerHand);
 }
