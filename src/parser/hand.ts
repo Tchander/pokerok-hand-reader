@@ -40,6 +40,7 @@ export function setButtonSeat(hand: PokerHand, buttonSeat: number) {
 }
 
 export async function handHandler(hand: string[]) {
+  console.log(hand);
   const pokerHand = resetPokerHand();
 
   const countersStore = useCountersStore();

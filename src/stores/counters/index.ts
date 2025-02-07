@@ -91,7 +91,6 @@ export const useCountersStore = defineStore(StoreId.COUNTERS, () => {
   async function updateNumberOfHands(handCounter: number) {
     const counters = await getCounters();
     let numberOfHands: number | undefined = 0;
-    console.log(counters);
 
     if (counters) {
       numberOfHands = counters.numberOfHands;

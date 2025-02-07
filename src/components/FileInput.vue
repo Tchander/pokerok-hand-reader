@@ -8,6 +8,7 @@
 import { useCountersStore } from '@/stores/counters';
 import { handHandler } from '@/parser/hand';
 import { startsWith } from '@/utils/index.ts';
+import { KEY_WORDS } from '@/enums/parser';
 
 const countersStore = useCountersStore();
 
@@ -44,21 +45,25 @@ function readFile(file: File) {
     let handCounter = 0;
 
     for (const line of lines) {
-      if (startsWith(line, 'Poker Hand')) {
+      if (startsWith(line, KEY_WORDS.POKER_HAND)) {
         if (!currentHand.length) {
           currentHand.push(line);
-          continue;
+          handCounter++;
+        } else {
+          // Обработка руки
+          await handHandler(currentHand);
+
+          currentHand = [];
+          currentHand.push(line);
+          handCounter++;
         }
-
-        handCounter++;
-
-        // Обработка руки
-        await handHandler(currentHand);
-        currentHand = [];
-        currentHand.push(line);
       } else {
         currentHand.push(line);
       }
+    }
+
+    if (currentHand.length) {
+      await handHandler(currentHand);
     }
 
     await countersStore.updateNumberOfHands(handCounter);
