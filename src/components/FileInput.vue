@@ -5,6 +5,7 @@
 </template>
 
 <script setup lang="ts">
+import { handHandler } from '@/parser/hand';
 import { startsWith } from '@/utils/index.ts';
 
 function onInputChange(event: Event) {
@@ -30,8 +31,7 @@ function readFile(file: File) {
 
     const lines = content.split('\n').filter(line => line.trim() !== ''); // Разделяем содержимое на строки и удаляем пустые
 
-    const hands = [];
-    let currentHand = [];
+    let currentHand: string[] = [];
     let handCounter = 0;
 
     for (const line of lines) {
@@ -42,7 +42,9 @@ function readFile(file: File) {
         }
 
         handCounter++;
-        hands.push(currentHand);
+
+        // Обработка руки
+        handHandler(currentHand);
         currentHand = [];
         currentHand.push(line);
       } else {
@@ -51,7 +53,6 @@ function readFile(file: File) {
     }
 
     console.log(handCounter);
-    console.log(hands);
   }
 
   // Чтение файла как текста

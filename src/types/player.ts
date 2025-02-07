@@ -1,10 +1,9 @@
-import type { TableType } from '@/enums/pokerType';
 import type { SixMaxPositions } from '@/enums/positions';
 import type { StartHand } from './hand';
 
 export type Player = {
   id: string;
-  tableType: TableType;
+  seatNumber: number;
   startStackInChips: number;
   startStackInBB: number;
   currentStackInChips: number;

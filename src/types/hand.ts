@@ -1,4 +1,5 @@
 
+import type { TableType } from '@/enums/pokerType';
 import type { Action } from './actions';
 import type { Player } from './player';
 
@@ -13,6 +14,9 @@ export type PreFlopCounters = {
 
 export type PokerHand = {
   sizeOfBB: number;
+  sizeOfSB: number;
+  tableType: TableType | null;
+  buttonSeat: number | null;
   players: Player[];
   maxNumberOfPlayers: number;
   currentNumberOfPlayers: number;
