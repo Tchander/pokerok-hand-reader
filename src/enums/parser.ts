@@ -30,5 +30,4 @@ export enum KEY_WORDS {
   TAX = 'Tax',
 
   BOARD = 'BOARD',
-
 }

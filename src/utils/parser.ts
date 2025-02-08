@@ -83,19 +83,28 @@ export function getHandInfo(hand: string[], currentStage: string): StageInfo {
   return { info, endIndex };
 }
 
+export function getHand(firstCard: string, secondCard: string): StartHand {
+  return [firstCard.slice(1), secondCard.slice(0, 2)];
+}
+
 export function getHeroHand(str: string): StartHand | undefined {
   const arr = getArrayFromString(str, ' ');
 
   if (arr[2] !== KEY_WORDS.HERO) return;
 
-  const firstCard = arr[3].slice(1);
-  const secondCard = arr[4].slice(0, 2);
-
-  return [firstCard, secondCard];
+  return getHand(arr[3], arr[4]);
 }
 
 export function getActionInfo(str: string): Action {
   const arr = getArrayFromString(str, ' ');
+
+  if (startsWith(str, KEY_WORDS.UNCALLED_BET)) {
+    const id = arr[arr.length - 1];
+    const action = arr[0] as PlayerAction;
+    const amount = +arr[2].slice(2, -1);
+    return { id, action, amount };
+  }
+
   const id = arr[0];
   const action = arr[1] as PlayerAction;
 
@@ -104,5 +113,26 @@ export function getActionInfo(str: string): Action {
     return { id, action, amount };
   }
 
+  if (action === PlayerAction.SHOW) {
+    const cards = getHand(arr[2], arr[3]);
+    return { id, action, cards };
+  }
+
   return { id, action };
+}
+
+export function getFlopCards(str: string): { firstCard: string, secondCard: string, thirdCard: string } {
+  const arr = getArrayFromString(str, ' ');
+
+  const firstCard = arr[3].slice(1);
+  const secondCard = arr[4];
+  const thirdCard = arr[5].slice(0, -1);
+
+  return { firstCard, secondCard, thirdCard };
+}
+
+export function getTurnOrRiverCard(str: string): string {
+  const arr = getArrayFromString(str, ' ');
+
+  return arr[arr.length - 1].slice(1, -1);
 }

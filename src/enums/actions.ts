@@ -5,4 +5,5 @@ export enum PlayerAction {
   FOLD = 'folds',
   RAISE = 'raises',
   SHOW = 'shows',
+  UNCALLED = 'Uncalled',
 }

@@ -1,8 +1,18 @@
 import { setBlinds, setButtonSeat, setMaxNumberOfPlayers, setTableType } from './setParams';
 import { KEY_WORDS } from '@/enums/parser';
 import { getArrayFromString, startsWith } from '@/utils';
-import { getActionInfo, getBlinds, getHandInfo, getHeroHand, getPlayersInfo, getTableTypeAndButtonSeat, setInitPot } from '@/utils/parser';
-import type { Action, PokerHand, PositionsInfo } from '@/types';
+import {
+  getActionInfo,
+  getBlinds,
+  getFlopCards,
+  getHandInfo,
+  getHeroHand,
+  getPlayersInfo,
+  getTableTypeAndButtonSeat,
+  getTurnOrRiverCard,
+  setInitPot,
+} from '@/utils/parser';
+import type { PokerHand, PositionsInfo } from '@/types';
 
 const defaultPokerHand: PokerHand = {
   sizeOfSB: 0,
@@ -100,7 +110,7 @@ export async function handHandler(hand: string[]) {
       setMaxNumberOfPlayers(pokerHand, tableType);
     }
 
-    /* *** Set players data *** */
+    /*** Set players data ***/
     if (startsWith(str, KEY_WORDS.SEAT)) {
       const player = getPlayersInfo(str, pokerHand.sizeOfBB);
       pokerHand.players.push(player);
@@ -132,6 +142,9 @@ export async function handHandler(hand: string[]) {
     }
   }
 
+  /*** Set Current Players Number ***/
+  pokerHand.currentNumberOfPlayers = pokerHand.players.length;
+
   /*** Set Players Postitions ***/
   const buttonIndex = positionsInfo.findIndex((player) => player.seat === pokerHand.buttonSeat);
   if (buttonIndex !== -1) {
@@ -159,7 +172,7 @@ export async function handHandler(hand: string[]) {
     }
   }
 
-  /* *** Set PreFlop Data *** */
+  /*** Set PreFlop Data ***/
   for (let i = 0; i < preFlopInfo.length; i++) {
     const str = preFlopInfo[i];
 
@@ -175,6 +188,36 @@ export async function handHandler(hand: string[]) {
     } else {
       // Set PreFlopAction
       pokerHand.preFlopActions.push(getActionInfo(str));
+    }
+  }
+
+  /*** Set Flop Data ***/
+  for (const str of flopInfo) {
+    if (startsWith(str, KEY_WORDS.FLOP)) {
+      const { firstCard, secondCard, thirdCard } = getFlopCards(str);
+      pokerHand.boardCards[0] = firstCard;
+      pokerHand.boardCards[1] = secondCard;
+      pokerHand.boardCards[2] = thirdCard;
+    } else {
+      pokerHand.flopActions.push(getActionInfo(str));
+    }
+  }
+
+  /*** Set Turn Data ***/
+  for (const str of turnInfo) {
+    if (startsWith(str, KEY_WORDS.TURN)) {
+      pokerHand.boardCards[3] = getTurnOrRiverCard(str);
+    } else {
+      pokerHand.turnActions.push(getActionInfo(str));
+    }
+  }
+
+  /*** Set River Data ***/
+  for (const str of riverInfo) {
+    if (startsWith(str, KEY_WORDS.RIVER)) {
+      pokerHand.boardCards[4] = getTurnOrRiverCard(str);
+    } else {
+      pokerHand.riverActions.push(getActionInfo(str));
     }
   }
 
