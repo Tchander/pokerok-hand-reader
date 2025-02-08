@@ -1,8 +1,7 @@
-import { getArrayFromString } from '.';
+import { getArrayFromString, startsWith } from '.';
 import { KEY_WORDS } from '@/enums/parser';
 import { TableType } from '@/enums/pokerType';
-import { SixMaxPositions } from '@/enums/positions';
-import type { Blinds, Player, PokerHand } from '@/types';
+import type { Blinds, Player, PokerHand, StageInfo } from '@/types';
 
 export const MAX_NUMBER_OF_PLAYERS_MAP: Record<TableType, number> = {
   [TableType.SIX_MAX]: 6,
@@ -28,7 +27,7 @@ export function getTableTypeAndButtonSeat(str: string): { tableType: TableType, 
   return { tableType, buttonSeat };
 }
 
-export function getPlayersInfo(str: string, buttonSeat: number | null, sizeOfBb: number): Player {
+export function getPlayersInfo(str: string, sizeOfBb: number): Player {
   const arr = getArrayFromString(str, ' ');
 
   const seatNumber = parseInt(arr[1], 10);
@@ -40,7 +39,6 @@ export function getPlayersInfo(str: string, buttonSeat: number | null, sizeOfBb:
     id,
     isHero: id === KEY_WORDS.HERO,
     seatNumber,
-    position: seatNumber === buttonSeat ? SixMaxPositions.BU : undefined,
     startStackInChips: stackInChips,
     startStackInBB: stackInBB,
     currentStackInChips: stackInChips,
@@ -57,4 +55,29 @@ export function setInitPot(str: string, hand: PokerHand): Player | undefined {
   const id = arr[0].slice(0, -1);
 
   return hand.players.find((player) => player.id === id);
+}
+
+export function getHandInfo(hand: string[], currentStage: string): StageInfo {
+  const info: string[] = [];
+  let endIndex: number = -1;
+
+  for (let i = 0; i < hand.length; i++) {
+    const str = hand[i];
+
+    if (i === 0 && !startsWith(str, currentStage)) break;
+
+    if (i === 0 && startsWith(str, currentStage)) {
+      info.push(str);
+      continue;
+    }
+
+    if (startsWith(str, KEY_WORDS.NEXT_STAGE)) {
+      endIndex = i;
+      break;
+    } else {
+      info.push(str);
+    }
+  }
+
+  return { info, endIndex };
 }

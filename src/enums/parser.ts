@@ -14,6 +14,7 @@ export enum KEY_WORDS {
   RETURNED_TO = 'returned to',
   ALL_IN = 'all-in',
 
+  NEXT_STAGE = '***',
   HOLE_CARDS = '*** HOLE CARDS ***',
   FLOP = '*** FLOP ***',
   TURN = '*** TURN ***',
