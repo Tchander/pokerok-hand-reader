@@ -1,7 +1,8 @@
+import { PlayerAction } from '@/enums/actions';
 import { getArrayFromString, startsWith } from '.';
 import { KEY_WORDS } from '@/enums/parser';
 import { TableType } from '@/enums/pokerType';
-import type { Blinds, Player, PokerHand, StageInfo } from '@/types';
+import type { Action, Blinds, Player, PokerHand, StageInfo, StartHand } from '@/types';
 
 export const MAX_NUMBER_OF_PLAYERS_MAP: Record<TableType, number> = {
   [TableType.SIX_MAX]: 6,
@@ -80,4 +81,28 @@ export function getHandInfo(hand: string[], currentStage: string): StageInfo {
   }
 
   return { info, endIndex };
+}
+
+export function getHeroHand(str: string): StartHand | undefined {
+  const arr = getArrayFromString(str, ' ');
+
+  if (arr[2] !== KEY_WORDS.HERO) return;
+
+  const firstCard = arr[3].slice(1);
+  const secondCard = arr[4].slice(0, 2);
+
+  return [firstCard, secondCard];
+}
+
+export function getActionInfo(str: string): Action {
+  const arr = getArrayFromString(str, ' ');
+  const id = arr[0];
+  const action = arr[1] as PlayerAction;
+
+  if (action === PlayerAction.BET || action === PlayerAction.CALL || action === PlayerAction.RAISE) {
+    const amount = +arr[arr.length - 1].slice(1);
+    return { id, action, amount };
+  }
+
+  return { id, action };
 }

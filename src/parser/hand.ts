@@ -1,8 +1,8 @@
 import { setBlinds, setButtonSeat, setMaxNumberOfPlayers, setTableType } from './setParams';
 import { KEY_WORDS } from '@/enums/parser';
 import { getArrayFromString, startsWith } from '@/utils';
-import { getBlinds, getHandInfo, getPlayersInfo, getTableTypeAndButtonSeat, setInitPot } from '@/utils/parser';
-import type { PokerHand, PositionsInfo } from '@/types';
+import { getActionInfo, getBlinds, getHandInfo, getHeroHand, getPlayersInfo, getTableTypeAndButtonSeat, setInitPot } from '@/utils/parser';
+import type { Action, PokerHand, PositionsInfo } from '@/types';
 
 const defaultPokerHand: PokerHand = {
   sizeOfSB: 0,
@@ -157,7 +157,26 @@ export async function handHandler(hand: string[]) {
         positionCounter++;
       }
     }
-
-    console.log(pokerHand);
   }
+
+  /* *** Set PreFlop Data *** */
+  for (let i = 0; i < preFlopInfo.length; i++) {
+    const str = preFlopInfo[i];
+
+    // Set Hero Hand
+    if (i <= pokerHand.players.length) {
+      const heroHand = getHeroHand(str);
+      if (heroHand) {
+        const player = pokerHand.players.find((pl) => pl.id === KEY_WORDS.HERO);
+        if (player) {
+          player.hand = heroHand;
+        }
+      }
+    } else {
+      // Set PreFlopAction
+      pokerHand.preFlopActions.push(getActionInfo(str));
+    }
+  }
+
+  console.log(pokerHand);
 }
