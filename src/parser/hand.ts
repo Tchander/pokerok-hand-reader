@@ -28,6 +28,7 @@ const defaultPokerHand: PokerHand = {
   flopActions: [],
   turnActions: [],
   riverActions: [],
+  showdownActions: [],
   boardCards: [null, null, null, null, null],
 };
 
@@ -43,7 +44,7 @@ export async function handHandler(hand: string[]) {
   let turnInfo: string[] = [];
   let riverInfo: string[] = [];
   let showdownInfo: string[] = [];
-  let summaryInfo: string[] = [];
+  // let summaryInfo: string[] = []; пока что не нужна
 
   /* Create Init Array */
   const initData = getHandInfo(hand, KEY_WORDS.POKER_HAND);
@@ -88,7 +89,7 @@ export async function handHandler(hand: string[]) {
   }
 
   /* Create Summary Array */
-  summaryInfo = hand;
+  // summaryInfo = hand; // пока что не нужна
 
 
   const positionsInfo: PositionsInfo[] = [];
@@ -219,6 +220,13 @@ export async function handHandler(hand: string[]) {
     } else {
       pokerHand.riverActions.push(getActionInfo(str));
     }
+  }
+
+  /*** Set Showdown Data ***/
+  for (let i = 0; i < showdownInfo.length; i++) {
+    if (i === 0) continue;
+
+    pokerHand.showdownActions.push(getActionInfo(showdownInfo[i]));
   }
 
   console.log(pokerHand);

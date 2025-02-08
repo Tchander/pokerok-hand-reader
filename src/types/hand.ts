@@ -26,5 +26,6 @@ export type PokerHand = {
   flopActions: Action[];
   turnActions: Action[];
   riverActions: Action[];
+  showdownActions: Action[];
   boardCards: BoardCards;
 };

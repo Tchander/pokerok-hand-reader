@@ -6,4 +6,5 @@ export enum PlayerAction {
   RAISE = 'raises',
   SHOW = 'shows',
   UNCALLED = 'Uncalled',
+  COLLECTED = 'collected',
 }
