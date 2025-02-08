@@ -1,8 +1,10 @@
 import type { SixMaxPositions } from '@/enums/positions';
 import type { StartHand } from './hand';
 
+export type PlayerId = string;
+
 export type Player = {
-  id: string;
+  id: PlayerId;
   isHero: boolean;
   seatNumber: number;
   startStackInChips: number;
@@ -16,3 +18,4 @@ export type Player = {
   hand?: StartHand;
   straddle?: number,
 }
+

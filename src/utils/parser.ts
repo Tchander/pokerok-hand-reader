@@ -34,7 +34,7 @@ export function getPlayersInfo(str: string, sizeOfBb: number): Player {
   const seatNumber = parseInt(arr[1], 10);
   const id = arr[2];
   const stackInChips = +arr[3].slice(2);
-  const stackInBB = stackInChips / sizeOfBb;
+  const stackInBB = convertChipsIntoBb(stackInChips, sizeOfBb);
 
   return {
     id,
@@ -105,8 +105,15 @@ export function getActionInfo(str: string): Action {
     return { id, action, amount };
   }
 
-  const id = arr[0];
   const action = arr[1] as PlayerAction;
+
+  if (action === PlayerAction.COLLECTED) {
+    const id = arr[0];
+    const amount = +arr[2].slice(1);
+    return { id, action, amount };
+  }
+
+  const id = arr[0].slice(0, -1);
 
   if (action === PlayerAction.BET || action === PlayerAction.CALL || action === PlayerAction.RAISE || action === PlayerAction.UNCALLED) {
     const amount = +arr[arr.length - 1].slice(1);
@@ -135,4 +142,8 @@ export function getTurnOrRiverCard(str: string): string {
   const arr = getArrayFromString(str, ' ');
 
   return arr[arr.length - 1].slice(1, -1);
+}
+
+export function convertChipsIntoBb(amount: number, sizeOfBb: number) {
+  return amount / sizeOfBb;
 }

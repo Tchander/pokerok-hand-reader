@@ -2,6 +2,7 @@ import { setBlinds, setButtonSeat, setMaxNumberOfPlayers, setTableType } from '.
 import { KEY_WORDS } from '@/enums/parser';
 import { getArrayFromString, startsWith } from '@/utils';
 import {
+  convertChipsIntoBb,
   getActionInfo,
   getBlinds,
   getFlopCards,
@@ -12,7 +13,8 @@ import {
   getTurnOrRiverCard,
   setInitPot,
 } from '@/utils/parser';
-import type { PokerHand, PositionsInfo } from '@/types';
+import type { PlayerId, PokerHand, PositionsInfo } from '@/types';
+import { PlayerAction } from '@/enums/actions';
 
 const defaultPokerHand: PokerHand = {
   sizeOfSB: 0,
@@ -143,6 +145,13 @@ export async function handHandler(hand: string[]) {
     }
   }
 
+  /*** Set ID-Index mapper ***/
+  const ID_INDEX_MAP: Record<PlayerId, number> = {};
+
+  for (let i = 0; i < pokerHand.players.length; i++) {
+    ID_INDEX_MAP[pokerHand.players[i].id] = i;
+  }
+
   /*** Set Current Players Number ***/
   pokerHand.currentNumberOfPlayers = pokerHand.players.length;
 
@@ -155,21 +164,17 @@ export async function handHandler(hand: string[]) {
     let positionCounter = 0;
 
     for (const item of arrAfterIndex) {
-      const player = pokerHand.players.find((el) => el.id === item.id);
+      const player = pokerHand.players[ID_INDEX_MAP[item.id]];
 
-      if (player) {
-        player.position = positionCounter;
-        positionCounter++;
-      }
+      player.position = positionCounter;
+      positionCounter++;
     }
 
     for (const item of arrBeforeIndex) {
-      const player = pokerHand.players.find((el) => el.id === item.id);
+      const player = pokerHand.players[ID_INDEX_MAP[item.id]];
 
-      if (player) {
-        player.position = positionCounter;
-        positionCounter++;
-      }
+      player.position = positionCounter;
+      positionCounter++;
     }
   }
 
@@ -178,13 +183,12 @@ export async function handHandler(hand: string[]) {
     const str = preFlopInfo[i];
 
     // Set Hero Hand
-    if (i <= pokerHand.players.length) {
+    if (i <= pokerHand.currentNumberOfPlayers) {
       const heroHand = getHeroHand(str);
       if (heroHand) {
-        const player = pokerHand.players.find((pl) => pl.id === KEY_WORDS.HERO);
-        if (player) {
-          player.hand = heroHand;
-        }
+        const player = pokerHand.players[ID_INDEX_MAP[KEY_WORDS.HERO]];
+
+        player.hand = heroHand;
       }
     } else {
       // Set PreFlopAction
@@ -227,6 +231,26 @@ export async function handHandler(hand: string[]) {
     if (i === 0) continue;
 
     pokerHand.showdownActions.push(getActionInfo(showdownInfo[i]));
+  }
+
+  const isFirstPreFlopRaise: boolean = false;
+  const callCounter: number = 0;
+  const raiseCounter: number = 0;
+
+  for (const playerAction of pokerHand.preFlopActions) {
+    const { id, action, amount, cards } = playerAction;
+
+    const player = pokerHand.players[ID_INDEX_MAP[id]];
+
+    if (action === PlayerAction.RAISE) {
+      if (amount) {
+        player.moneyInPotInChips += amount;
+        player.moneyInPotInBB += convertChipsIntoBb(amount, pokerHand.sizeOfBB);
+
+        pokerHand.potInChips += amount;
+        pokerHand.potInBB += convertChipsIntoBb(amount, pokerHand.sizeOfBB);
+      }
+    }
   }
 
   console.log(pokerHand);
