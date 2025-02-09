@@ -1,11 +1,16 @@
 import { PlayerAction } from '@/enums/actions';
-import { getArrayFromString, startsWith } from '.';
+import { dcr, getArrayFromString, startsWith } from '.';
 import { KEY_WORDS } from '@/enums/parser';
 import { TableType } from '@/enums/pokerType';
-import type { Action, Blinds, Player, PlayerId, StageInfo, StartHand } from '@/types';
+import type { Action, Blinds, BoardsAmount, Player, PlayerId, StageInfo, StartHand } from '@/types';
 
 export const MAX_NUMBER_OF_PLAYERS_MAP: Record<TableType, number> = {
   [TableType.SIX_MAX]: 6,
+};
+
+export const BOARDS_AMOUNT_MAP: Record<string, BoardsAmount> = {
+  'two times': 2,
+  'three times': 3,
 };
 
 export function isHero(id: PlayerId) {
@@ -81,7 +86,7 @@ export function getHandInfo(hand: string[], currentStage: string): StageInfo {
 }
 
 export function getHand(firstCard: string, secondCard: string): StartHand {
-  return [firstCard.slice(1), secondCard.slice(0, 2)];
+  return [dcr(firstCard).slice(1), dcr(secondCard).slice(0, 2)];
 }
 
 export function getHeroHand(str: string): StartHand | undefined {
@@ -130,14 +135,22 @@ export function getActionInfo(str: string): Action {
   return { id, action };
 }
 
-export function getFlopCards(str: string): { firstCard: string, secondCard: string, thirdCard: string } {
+export function getFlopCards(str: string, isMoreThanOneBoard: boolean): { firstCard: string, secondCard: string, thirdCard: string } {
   const arr = getArrayFromString(str, ' ');
 
-  const firstCard = arr[3].slice(1);
-  const secondCard = arr[4];
-  const thirdCard = arr[5].slice(0, -1);
+  if (isMoreThanOneBoard) {
+    const firstCard = arr[4].slice(1);
+    const secondCard = arr[5];
+    const thirdCard = arr[6].slice(0, -1);
 
-  return { firstCard, secondCard, thirdCard };
+    return { firstCard, secondCard, thirdCard };
+  } else {
+    const firstCard = arr[3].slice(1);
+    const secondCard = arr[4];
+    const thirdCard = arr[5].slice(0, -1);
+
+    return { firstCard, secondCard, thirdCard };
+  }
 }
 
 export function getTurnOrRiverCard(str: string): string {
@@ -154,4 +167,12 @@ export function getStraddleAmount(str: string) {
   const arr = getArrayFromString(str, ' ');
 
   return +arr[arr.length - 1].slice(1);
+}
+
+export function getBoardsAmount(str: string): BoardsAmount {
+  const arr = getArrayFromString(str, ' ');
+
+  const amount = `${arr[3]} ${arr[4]}`;
+
+  return BOARDS_AMOUNT_MAP[amount];
 }

@@ -1,19 +1,18 @@
-import { setBlinds, setButtonSeat, setMaxNumberOfPlayers, setTableType } from './setParams';
+import { setBlinds, setButtonSeat, setFlopData, setMaxNumberOfPlayers, setRiverData, setShowdownData, setTableType, setTurnData } from './setParams';
 import { KEY_WORDS } from '@/enums/parser';
 import { getArrayFromString, startsWith } from '@/utils';
 import { PlayerAction } from '@/enums/actions';
 import {
   getActionInfo,
   getBlinds,
-  getFlopCards,
   getHandInfo,
   getHeroHand,
   getPlayersInfo,
   getTableTypeAndButtonSeat,
-  getTurnOrRiverCard,
   getPlayerId,
   getStraddleAmount,
   isHero,
+  getBoardsAmount,
 } from '@/utils/parser';
 import type { PlayerId, PokerHand, PositionsInfo } from '@/types';
 import type { Counters } from '@/stores/counters';
@@ -28,12 +27,23 @@ const defaultPokerHand: PokerHand = {
   maxNumberOfPlayers: 0,
   currentNumberOfPlayers: 0,
   potInChips: 0,
-  preFlopActions: [],
-  flopActions: [],
-  turnActions: [],
-  riverActions: [],
-  showdownActions: [],
-  boardCards: [null, null, null, null, null],
+  actions: {
+    preFlopActions: [],
+    flopActions1: [],
+    flopActions2: [],
+    flopActions3: [],
+    turnActions1: [],
+    turnActions2: [],
+    turnActions3: [],
+    riverActions1: [],
+    riverActions2: [],
+    riverActions3: [],
+    showdownActions1: [],
+    showdownActions2: [],
+    showdownActions3: [],
+  },
+  boards: [[null, null, null, null, null], [null, null, null, null, null], [null, null, null, null, null]],
+  boardsAmount: 1,
 };
 
 const additionalCounters = {
@@ -70,13 +80,22 @@ export function resetPokerHand() {
 
 export async function handHandler(hand: string[]) {
   const pokerHand = resetPokerHand();
+  let isMoreThanOneBoard: boolean = false;
   let initInfo: string[] = [];
   let preFlopInfo: string[] = [];
-  let flopInfo: string[] = [];
-  let turnInfo: string[] = [];
-  let riverInfo: string[] = [];
-  let showdownInfo: string[] = [];
-  // let summaryInfo: string[] = []; пока что не нужна
+  let flopInfo1: string[] = [];
+  let flopInfo2: string[] = [];
+  let flopInfo3: string[] = [];
+  let turnInfo1: string[] = [];
+  let turnInfo2: string[] = [];
+  let turnInfo3: string[] = [];
+  let riverInfo1: string[] = [];
+  let riverInfo2: string[] = [];
+  let riverInfo3: string[] = [];
+  let showdownInfo1: string[] = [];
+  let showdownInfo2: string[] = [];
+  let showdownInfo3: string[] = [];
+  let summaryInfo: string[] = [];
 
   /* Create Init Array */
   const initData = getHandInfo(hand, KEY_WORDS.POKER_HAND);
@@ -92,37 +111,159 @@ export async function handHandler(hand: string[]) {
     hand = hand.slice(preFlopData.endIndex);
   }
 
-  /* Create Flop Array */
-  const flopData = getHandInfo(hand, KEY_WORDS.FLOP);
-  if (flopData.endIndex !== -1) {
-    flopInfo = flopData.info;
-    hand = hand.slice(flopData.endIndex);
-  }
+  if (startsWith(hand[0], KEY_WORDS.FLOP)) {
+    /* Create Flop Array */
+    const flopData = getHandInfo(hand, KEY_WORDS.FLOP);
+    if (flopData.endIndex !== -1) {
+      flopInfo1 = flopData.info;
+      hand = hand.slice(flopData.endIndex);
+    }
 
-  /* Create Turn Array */
-  const turnData = getHandInfo(hand, KEY_WORDS.TURN);
-  if (turnData.endIndex !== -1) {
-    turnInfo = turnData.info;
-    hand = hand.slice(turnData.endIndex);
-  }
+    /* Create Turn Array */
+    const turnData = getHandInfo(hand, KEY_WORDS.TURN);
+    if (turnData.endIndex !== -1) {
+      turnInfo1 = turnData.info;
+      hand = hand.slice(turnData.endIndex);
+    }
 
-  /* Create River Array */
-  const riverData = getHandInfo(hand, KEY_WORDS.RIVER);
-  if (riverData.endIndex !== -1) {
-    riverInfo = riverData.info;
-    hand = hand.slice(riverData.endIndex);
-  }
+    /* Create River Array */
+    const riverData = getHandInfo(hand, KEY_WORDS.RIVER);
+    if (riverData.endIndex !== -1) {
+      riverInfo1 = riverData.info;
+      hand = hand.slice(riverData.endIndex);
+    }
 
-  /* Create Showdown Array */
-  const showdownData = getHandInfo(hand, KEY_WORDS.SHOWDOWN);
-  if (showdownData.endIndex !== -1) {
-    showdownInfo = showdownData.info;
-    hand = hand.slice(showdownData.endIndex);
+    /* Create Showdown Array */
+    const showdownData = getHandInfo(hand, KEY_WORDS.SHOWDOWN);
+    if (showdownData.endIndex !== -1) {
+      showdownInfo1 = showdownData.info;
+      hand = hand.slice(showdownData.endIndex);
+    }
+
+  } else {
+    /* If more than one board */
+    isMoreThanOneBoard = true;
+
+    if (startsWith(hand[0], KEY_WORDS.FIRST_FLOP)) {
+      /* Create First Flop Array */
+      const flopData1 = getHandInfo(hand, KEY_WORDS.FIRST_FLOP);
+      if (flopData1.endIndex !== -1) {
+        flopInfo1 = flopData1.info;
+        hand = hand.slice(flopData1.endIndex);
+      }
+    }
+
+    if (startsWith(hand[0], KEY_WORDS.FIRST_TURN)) {
+      /* Create First Turn Array */
+      const turnData1 = getHandInfo(hand, KEY_WORDS.FIRST_TURN);
+      if (turnData1.endIndex !== -1) {
+        turnInfo1 = turnData1.info;
+        hand = hand.slice(turnData1.endIndex);
+      }
+    }
+
+    if (startsWith(hand[0], KEY_WORDS.FIRST_RIVER)) {
+      /* Create First River Array */
+      const riverData1 = getHandInfo(hand, KEY_WORDS.FIRST_RIVER);
+      if (riverData1.endIndex !== -1) {
+        riverInfo1 = riverData1.info;
+        hand = hand.slice(riverData1.endIndex);
+      }
+    }
+
+    if (startsWith(hand[0], KEY_WORDS.SECOND_FLOP)) {
+      /* Create Second Flop Array */
+      const flopData2 = getHandInfo(hand, KEY_WORDS.SECOND_FLOP);
+      if (flopData2.endIndex !== -1) {
+        flopInfo2 = flopData2.info;
+        hand = hand.slice(flopData2.endIndex);
+      }
+    }
+
+    if (startsWith(hand[0], KEY_WORDS.SECOND_TURN)) {
+      /* Create Second Turn Array */
+      const turnData2 = getHandInfo(hand, KEY_WORDS.SECOND_TURN);
+      if (turnData2.endIndex !== -1) {
+        turnInfo2 = turnData2.info;
+        hand = hand.slice(turnData2.endIndex);
+      }
+    }
+
+    if (startsWith(hand[0], KEY_WORDS.SECOND_RIVER)) {
+      /* Create Second River Array */
+      const riverData2 = getHandInfo(hand, KEY_WORDS.SECOND_RIVER);
+      if (riverData2.endIndex !== -1) {
+        riverInfo2 = riverData2.info;
+        hand = hand.slice(riverData2.endIndex);
+      }
+    }
+
+    if (startsWith(hand[0], KEY_WORDS.THIRD_FLOP)) {
+      /* Create Third Flop Array */
+      const flopData3 = getHandInfo(hand, KEY_WORDS.THIRD_FLOP);
+      if (flopData3.endIndex !== -1) {
+        flopInfo3 = flopData3.info;
+        hand = hand.slice(flopData3.endIndex);
+      }
+    }
+
+    if (startsWith(hand[0], KEY_WORDS.THIRD_TURN)) {
+      /* Create Third Turn Array */
+      const turnData3 = getHandInfo(hand, KEY_WORDS.THIRD_TURN);
+      if (turnData3.endIndex !== -1) {
+        turnInfo3 = turnData3.info;
+        hand = hand.slice(turnData3.endIndex);
+      }
+    }
+
+    if (startsWith(hand[0], KEY_WORDS.THIRD_RIVER)) {
+      /* Create Third River Array */
+      const riverData3 = getHandInfo(hand, KEY_WORDS.THIRD_RIVER);
+      if (riverData3.endIndex !== -1) {
+        riverInfo3 = riverData3.info;
+        hand = hand.slice(riverData3.endIndex);
+      }
+    }
+
+    if (startsWith(hand[0], KEY_WORDS.FIRST_SHOWDOWN)) {
+      /* Create First Showdown Array */
+      const showdownData1 = getHandInfo(hand, KEY_WORDS.FIRST_SHOWDOWN);
+      if (showdownData1.endIndex !== -1) {
+        showdownInfo1 = showdownData1.info;
+        hand = hand.slice(showdownData1.endIndex);
+      }
+    }
+
+    if (startsWith(hand[0], KEY_WORDS.SECOND_SHOWDOWN)) {
+      /* Create Second Showdown Array */
+      const showdownData2 = getHandInfo(hand, KEY_WORDS.SECOND_SHOWDOWN);
+      if (showdownData2.endIndex !== -1) {
+        showdownInfo2 = showdownData2.info;
+        hand = hand.slice(showdownData2.endIndex);
+      }
+    }
+
+    if (startsWith(hand[0], KEY_WORDS.THIRD_SHOWDOWN)) {
+      /* Create Third Showdown Array */
+      const showdownData3 = getHandInfo(hand, KEY_WORDS.THIRD_SHOWDOWN);
+      if (showdownData3.endIndex !== -1) {
+        showdownInfo3 = showdownData3.info;
+        hand = hand.slice(showdownData3.endIndex);
+      }
+    }
   }
 
   /* Create Summary Array */
-  // summaryInfo = hand; // пока что не нужна
+  summaryInfo = hand;
 
+  if (isMoreThanOneBoard) {
+    for (const str of summaryInfo) {
+      if (startsWith(str, KEY_WORDS.HAND_WAS_RUN)) {
+        pokerHand.boardsAmount = getBoardsAmount(str);
+        break;
+      }
+    }
+  }
 
   const positionsInfo: PositionsInfo[] = [];
 
@@ -240,46 +381,30 @@ export async function handHandler(hand: string[]) {
       }
     } else {
       // Set PreFlopAction
-      pokerHand.preFlopActions.push(getActionInfo(str));
+      pokerHand.actions.preFlopActions.push(getActionInfo(str));
     }
   }
 
   /*** Set Flop Data ***/
-  for (const str of flopInfo) {
-    if (startsWith(str, KEY_WORDS.FLOP)) {
-      const { firstCard, secondCard, thirdCard } = getFlopCards(str);
-      pokerHand.boardCards[0] = firstCard;
-      pokerHand.boardCards[1] = secondCard;
-      pokerHand.boardCards[2] = thirdCard;
-    } else {
-      pokerHand.flopActions.push(getActionInfo(str));
-    }
-  }
+  setFlopData(pokerHand, flopInfo1, 1);
+  setFlopData(pokerHand, flopInfo2, 2);
+  setFlopData(pokerHand, flopInfo3, 3);
+
 
   /*** Set Turn Data ***/
-  for (const str of turnInfo) {
-    if (startsWith(str, KEY_WORDS.TURN)) {
-      pokerHand.boardCards[3] = getTurnOrRiverCard(str);
-    } else {
-      pokerHand.turnActions.push(getActionInfo(str));
-    }
-  }
+  setTurnData(pokerHand, turnInfo1, 1);
+  setTurnData(pokerHand, turnInfo2, 2);
+  setTurnData(pokerHand, turnInfo3, 3);
 
   /*** Set River Data ***/
-  for (const str of riverInfo) {
-    if (startsWith(str, KEY_WORDS.RIVER)) {
-      pokerHand.boardCards[4] = getTurnOrRiverCard(str);
-    } else {
-      pokerHand.riverActions.push(getActionInfo(str));
-    }
-  }
+  setRiverData(pokerHand, riverInfo1, 1);
+  setRiverData(pokerHand, riverInfo2, 2);
+  setRiverData(pokerHand, riverInfo3, 3);
 
   /*** Set Showdown Data ***/
-  for (let i = 0; i < showdownInfo.length; i++) {
-    if (i === 0) continue;
-
-    pokerHand.showdownActions.push(getActionInfo(showdownInfo[i]));
-  }
+  setShowdownData(pokerHand, showdownInfo1, 1);
+  setShowdownData(pokerHand, showdownInfo2, 2);
+  setShowdownData(pokerHand, showdownInfo3, 3);
 
   /*** PreFlop Actions Handler ***/
   let isHeroFoldedOnPreFlop: boolean = false;
@@ -287,7 +412,7 @@ export async function handHandler(hand: string[]) {
   let preFlopCallCounter: number = 0;
   let preFlopRaiseCounter: number = 0;
 
-  for (const playerAction of pokerHand.preFlopActions) {
+  for (const playerAction of pokerHand.actions.preFlopActions) {
     const { id, action, amount, cards } = playerAction;
 
     const player = pokerHand.players[ID_INDEX_MAP[id]];
@@ -353,30 +478,30 @@ export async function handHandler(hand: string[]) {
   }
 
   /*** Is Hero Saw Flop ***/
-  const hero = pokerHand.flopActions.find((el) => isHero(el.id));
+  const hero = pokerHand.actions.flopActions1.find((el) => isHero(el.id));
   if (hero) {
     counters.sawFlopTimes++;
   }
 
-  /*** Flop Actions Handler ***/
-  for (const playerAction of pokerHand.flopActions) {
-    const { id, action, amount, cards } = playerAction;
+  // /*** Flop Actions Handler ***/
+  // for (const playerAction of pokerHand.flopActions) {
+  //   const { id, action, amount, cards } = playerAction;
 
-    const player = pokerHand.players[ID_INDEX_MAP[id]];
-  }
+  //   const player = pokerHand.players[ID_INDEX_MAP[id]];
+  // }
 
-  /*** Showdown Actions Handler ***/
-  for (const playerAction of pokerHand.showdownActions) {
-    const { id, action, amount } = playerAction;
+  // /*** Showdown Actions Handler ***/
+  // for (const playerAction of pokerHand.showdownActions) {
+  //   const { id, action, amount } = playerAction;
 
-    const player = pokerHand.players[ID_INDEX_MAP[id]];
+  //   const player = pokerHand.players[ID_INDEX_MAP[id]];
 
-    if (action === PlayerAction.COLLECTED) {
-      if (!amount) continue;
+  //   if (action === PlayerAction.COLLECTED) {
+  //     if (!amount) continue;
 
-      player.currentStackInChips += amount;
-    }
-  }
+  //     player.currentStackInChips += amount;
+  //   }
+  // }
 
   counters.numberOfHands++;
   // console.log(additionalCounters);

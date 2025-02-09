@@ -15,11 +15,24 @@ export enum KEY_WORDS {
   ALL_IN = 'all-in',
 
   NEXT_STAGE = '***',
+
   HOLE_CARDS = '*** HOLE CARDS ***',
   FLOP = '*** FLOP ***',
+  FIRST_FLOP = '*** FIRST FLOP ***',
+  SECOND_FLOP = '*** SECOND FLOP ***',
+  THIRD_FLOP = '*** THIRD FLOP ***',
   TURN = '*** TURN ***',
+  FIRST_TURN = '*** FIRST TURN ***',
+  SECOND_TURN = '*** SECOND TURN ***',
+  THIRD_TURN = '*** THIRD TURN ***',
   RIVER = '*** RIVER ***',
+  FIRST_RIVER = '*** FIRST RIVER ***',
+  SECOND_RIVER = '*** SECOND RIVER ***',
+  THIRD_RIVER = '*** THIRD RIVER ***',
   SHOWDOWN = '*** SHOWDOWN ***',
+  FIRST_SHOWDOWN = '*** FIRST SHOWDOWN ***',
+  SECOND_SHOWDOWN = '*** SECOND SHOWDOWN ***',
+  THIRD_SHOWDOWN = '*** THIRD SHOWDOWN ***',
   SUMMARY = '*** SUMMARY ***',
 
   TOTAL_POT = 'Total pot',
@@ -30,4 +43,5 @@ export enum KEY_WORDS {
   TAX = 'Tax',
 
   BOARD = 'BOARD',
+  HAND_WAS_RUN = 'Hand was run',
 }
