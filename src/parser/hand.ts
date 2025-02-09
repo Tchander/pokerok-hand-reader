@@ -1,8 +1,8 @@
 import { setBlinds, setButtonSeat, setMaxNumberOfPlayers, setTableType } from './setParams';
 import { KEY_WORDS } from '@/enums/parser';
 import { getArrayFromString, startsWith } from '@/utils';
+import { PlayerAction } from '@/enums/actions';
 import {
-  convertChipsIntoBb,
   getActionInfo,
   getBlinds,
   getFlopCards,
@@ -11,10 +11,13 @@ import {
   getPlayersInfo,
   getTableTypeAndButtonSeat,
   getTurnOrRiverCard,
-  setInitPot,
+  getPlayerId,
+  getStraddleAmount,
+  isHero,
 } from '@/utils/parser';
 import type { PlayerId, PokerHand, PositionsInfo } from '@/types';
-import { PlayerAction } from '@/enums/actions';
+import type { Counters } from '@/stores/counters';
+import type { Stats } from '@/stores/stats';
 
 const defaultPokerHand: PokerHand = {
   sizeOfSB: 0,
@@ -25,13 +28,40 @@ const defaultPokerHand: PokerHand = {
   maxNumberOfPlayers: 0,
   currentNumberOfPlayers: 0,
   potInChips: 0,
-  potInBB: 0,
   preFlopActions: [],
   flopActions: [],
   turnActions: [],
   riverActions: [],
   showdownActions: [],
   boardCards: [null, null, null, null, null],
+};
+
+const additionalCounters = {
+  preFlopRaises: 0,
+  preFlopThreeBets: 0,
+  foldPreFlopThreeBets: 0,
+  preFlopSqueeze: 0,
+  handsPlayed: 0,
+};
+
+const counters: Counters = {
+  numberOfHands: 0,
+  sawFlopTimes: 0,
+  sawTurnTimes: 0,
+  sawRiverTimes: 0,
+  sawShowDownTimes: 0,
+  wonShowDownTimes: 0,
+};
+
+const stats: Stats = {
+  vpip: 0,
+  pfr: 0,
+  threeBet: 0,
+  wtsd: 0,
+  wmsd: 0,
+  wwsf: 0,
+  foldThreeBet: 0,
+  preFlopSqueeze: 0,
 };
 
 export function resetPokerHand() {
@@ -115,41 +145,59 @@ export async function handHandler(hand: string[]) {
 
     /*** Set players data ***/
     if (startsWith(str, KEY_WORDS.SEAT)) {
-      const player = getPlayersInfo(str, pokerHand.sizeOfBB);
+      const player = getPlayersInfo(str);
       pokerHand.players.push(player);
       positionsInfo.push({ id: player.id, seat: player.seatNumber })
     }
 
     if (str.includes(KEY_WORDS.POSTS_SMALL_BLIND)) {
-      const player = setInitPot(str, pokerHand);
+      const playerId = getPlayerId(str);
+
+      const player = pokerHand.players.find((pl) => pl.id === playerId);
 
       if (player) {
         pokerHand.potInChips += pokerHand.sizeOfSB;
-        pokerHand.potInBB += pokerHand.sizeOfSB / pokerHand.sizeOfBB;
-
         player.moneyInPotInChips += pokerHand.sizeOfSB;
-        player.moneyInPotInBB += pokerHand.sizeOfSB / pokerHand.sizeOfBB;
+        player.currentStackInChips -= pokerHand.sizeOfSB;
       }
     }
 
     if (str.includes(KEY_WORDS.POSTS_BIG_BLIND)) {
-      const player = setInitPot(str, pokerHand);
+      const playerId = getPlayerId(str);
+
+      const player = pokerHand.players.find((pl) => pl.id === playerId);
 
       if (player) {
         pokerHand.potInChips += pokerHand.sizeOfBB;
-        pokerHand.potInBB += 1;
-
         player.moneyInPotInChips += pokerHand.sizeOfBB;
-        player.moneyInPotInBB += 1;
+        player.currentStackInChips -= pokerHand.sizeOfBB;
+      }
+    }
+
+    if (str.includes(KEY_WORDS.STRADDLE)) {
+      const playerId = getPlayerId(str);
+
+      const player = pokerHand.players.find((pl) => pl.id === playerId);
+
+      if (player) {
+        player.straddle = getStraddleAmount(str);
       }
     }
   }
 
-  /*** Set ID-Index mapper ***/
+  /*** Set ID-Index mapper and Straddle ***/
   const ID_INDEX_MAP: Record<PlayerId, number> = {};
 
   for (let i = 0; i < pokerHand.players.length; i++) {
-    ID_INDEX_MAP[pokerHand.players[i].id] = i;
+    const player = pokerHand.players[i];
+
+    ID_INDEX_MAP[player.id] = i;
+
+    if (player.straddle) {
+      pokerHand.potInChips += player.straddle;
+      player.moneyInPotInChips += player.straddle;
+      player.currentStackInChips -= player.straddle;
+    }
   }
 
   /*** Set Current Players Number ***/
@@ -233,9 +281,10 @@ export async function handHandler(hand: string[]) {
     pokerHand.showdownActions.push(getActionInfo(showdownInfo[i]));
   }
 
-  const isFirstPreFlopRaise: boolean = false;
-  const callCounter: number = 0;
-  const raiseCounter: number = 0;
+  let isHeroFoldedOnPreFlop: boolean = false;
+  let isPreFlopRaise: boolean = false;
+  let preFlopCallCounter: number = 0;
+  let preFlopRaiseCounter: number = 0;
 
   for (const playerAction of pokerHand.preFlopActions) {
     const { id, action, amount, cards } = playerAction;
@@ -243,15 +292,73 @@ export async function handHandler(hand: string[]) {
     const player = pokerHand.players[ID_INDEX_MAP[id]];
 
     if (action === PlayerAction.RAISE) {
-      if (amount) {
-        player.moneyInPotInChips += amount;
-        player.moneyInPotInBB += convertChipsIntoBb(amount, pokerHand.sizeOfBB);
+      if (!amount) continue;
 
-        pokerHand.potInChips += amount;
-        pokerHand.potInBB += convertChipsIntoBb(amount, pokerHand.sizeOfBB);
+      if (isHero(id) && preFlopRaiseCounter === 0 && preFlopCallCounter >= 1) {
+        additionalCounters.preFlopSqueeze++;
       }
+
+      if (isHero(id) && preFlopRaiseCounter === 0) {
+        additionalCounters.preFlopRaises++;
+        isPreFlopRaise = true;
+      } else if (isHero(id) && preFlopRaiseCounter === 1) {
+        additionalCounters.preFlopThreeBets++;
+      }
+
+      pokerHand.potInChips += amount;
+      player.moneyInPotInChips += amount;
+      player.currentStackInChips -= amount;
+
+      preFlopRaiseCounter++;
+
+      continue;
+    }
+
+    if (action === PlayerAction.CALL) {
+      if (!amount) continue;
+
+      pokerHand.potInChips += amount;
+      player.moneyInPotInChips += amount;
+      player.currentStackInChips -= amount;
+
+
+      preFlopCallCounter++;
+    }
+
+    if (action === PlayerAction.FOLD) {
+      if (isHero(id)) {
+        isHeroFoldedOnPreFlop = true;
+      }
+
+      if (isHero(id) && isPreFlopRaise && preFlopRaiseCounter === 1) {
+        additionalCounters.foldPreFlopThreeBets++;
+      }
+    }
+
+    if (action === PlayerAction.UNCALLED) {
+      if (!amount) continue;
+
+      player.currentStackInChips += amount;
+      console.log(player.currentStackInChips);
     }
   }
 
+  /*** Is Hero Not Folded ***/
+  if (!isHeroFoldedOnPreFlop) {
+    additionalCounters.handsPlayed++;
+  }
+
+  /*** Is Hero Saw Flop ***/
+  const hero = pokerHand.flopActions.find((el) => isHero(el.id));
+  if (hero) {
+    counters.sawFlopTimes++;
+  }
+
+  console.log(preFlopCallCounter, preFlopRaiseCounter);
+
+
+  counters.numberOfHands++;
+  console.log(additionalCounters);
+  console.log(counters);
   console.log(pokerHand);
 }

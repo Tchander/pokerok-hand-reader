@@ -21,7 +21,6 @@ export type PokerHand = {
   maxNumberOfPlayers: number;
   currentNumberOfPlayers: number;
   potInChips: number;
-  potInBB: number;
   preFlopActions: Action[];
   flopActions: Action[];
   turnActions: Action[];

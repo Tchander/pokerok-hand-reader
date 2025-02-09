@@ -2,11 +2,15 @@ import { PlayerAction } from '@/enums/actions';
 import { getArrayFromString, startsWith } from '.';
 import { KEY_WORDS } from '@/enums/parser';
 import { TableType } from '@/enums/pokerType';
-import type { Action, Blinds, Player, PokerHand, StageInfo, StartHand } from '@/types';
+import type { Action, Blinds, Player, PlayerId, StageInfo, StartHand } from '@/types';
 
 export const MAX_NUMBER_OF_PLAYERS_MAP: Record<TableType, number> = {
   [TableType.SIX_MAX]: 6,
 };
+
+export function isHero(id: PlayerId) {
+  return id === KEY_WORDS.HERO;
+}
 
 export function getBlinds(arr: string[]): Blinds {
   const blindsInfoString = arr[arr.length - 4];
@@ -28,34 +32,27 @@ export function getTableTypeAndButtonSeat(str: string): { tableType: TableType, 
   return { tableType, buttonSeat };
 }
 
-export function getPlayersInfo(str: string, sizeOfBb: number): Player {
+export function getPlayersInfo(str: string): Player {
   const arr = getArrayFromString(str, ' ');
 
   const seatNumber = parseInt(arr[1], 10);
   const id = arr[2];
   const stackInChips = +arr[3].slice(2);
-  const stackInBB = convertChipsIntoBb(stackInChips, sizeOfBb);
 
   return {
     id,
-    isHero: id === KEY_WORDS.HERO,
+    isHero: isHero(id),
     seatNumber,
     startStackInChips: stackInChips,
-    startStackInBB: stackInBB,
     currentStackInChips: stackInChips,
-    currentStackInBB: stackInBB,
     moneyInPotInChips: 0,
-    moneyInPotInBB: 0,
-    isPreFlopRaise: false,
   }
 }
 
-export function setInitPot(str: string, hand: PokerHand): Player | undefined {
+export function getPlayerId(str: string): PlayerId {
   const arr = getArrayFromString(str, ' ');
 
-  const id = arr[0].slice(0, -1);
-
-  return hand.players.find((player) => player.id === id);
+  return arr[0].slice(0, -1);
 }
 
 export function getHandInfo(hand: string[], currentStage: string): StageInfo {
@@ -144,6 +141,12 @@ export function getTurnOrRiverCard(str: string): string {
   return arr[arr.length - 1].slice(1, -1);
 }
 
-export function convertChipsIntoBb(amount: number, sizeOfBb: number) {
-  return amount / sizeOfBb;
+// export function convertChipsIntoBb(amount: number, sizeOfBb: number) {
+//   return amount / sizeOfBb;
+// }
+
+export function getStraddleAmount(str: string) {
+  const arr = getArrayFromString(str, ' ');
+
+  return +arr[arr.length - 1].slice(1);
 }

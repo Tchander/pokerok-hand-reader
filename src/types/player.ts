@@ -8,12 +8,8 @@ export type Player = {
   isHero: boolean;
   seatNumber: number;
   startStackInChips: number;
-  startStackInBB: number;
   currentStackInChips: number;
-  currentStackInBB: number;
   moneyInPotInChips: number;
-  moneyInPotInBB: number;
-  isPreFlopRaise: boolean;
   position?: SixMaxPositions;
   hand?: StartHand;
   straddle?: number,
