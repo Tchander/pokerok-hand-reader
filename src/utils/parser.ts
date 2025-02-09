@@ -112,8 +112,13 @@ export function getActionInfo(str: string): Action {
 
   const id = arr[0].slice(0, -1);
 
-  if (action === PlayerAction.BET || action === PlayerAction.CALL || action === PlayerAction.RAISE || action === PlayerAction.UNCALLED) {
-    const amount = +arr[arr.length - 1].slice(1);
+  if (action === PlayerAction.RAISE) {
+    const amount = +arr[4].slice(1);
+    return { id, action, amount };
+  }
+
+  if (action === PlayerAction.BET || action === PlayerAction.CALL || action === PlayerAction.UNCALLED) {
+    const amount = +arr[2].slice(1);
     return { id, action, amount };
   }
 

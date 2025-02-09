@@ -281,6 +281,7 @@ export async function handHandler(hand: string[]) {
     pokerHand.showdownActions.push(getActionInfo(showdownInfo[i]));
   }
 
+  /*** PreFlop Actions Handler ***/
   let isHeroFoldedOnPreFlop: boolean = false;
   let isPreFlopRaise: boolean = false;
   let preFlopCallCounter: number = 0;
@@ -339,7 +340,10 @@ export async function handHandler(hand: string[]) {
       if (!amount) continue;
 
       player.currentStackInChips += amount;
-      console.log(player.currentStackInChips);
+    }
+
+    if (action === PlayerAction.SHOW) {
+      player.hand = cards;
     }
   }
 
@@ -354,11 +358,28 @@ export async function handHandler(hand: string[]) {
     counters.sawFlopTimes++;
   }
 
-  console.log(preFlopCallCounter, preFlopRaiseCounter);
+  /*** Flop Actions Handler ***/
+  for (const playerAction of pokerHand.flopActions) {
+    const { id, action, amount, cards } = playerAction;
 
+    const player = pokerHand.players[ID_INDEX_MAP[id]];
+  }
+
+  /*** Showdown Actions Handler ***/
+  for (const playerAction of pokerHand.showdownActions) {
+    const { id, action, amount } = playerAction;
+
+    const player = pokerHand.players[ID_INDEX_MAP[id]];
+
+    if (action === PlayerAction.COLLECTED) {
+      if (!amount) continue;
+
+      player.currentStackInChips += amount;
+    }
+  }
 
   counters.numberOfHands++;
-  console.log(additionalCounters);
-  console.log(counters);
+  // console.log(additionalCounters);
+  // console.log(counters);
   console.log(pokerHand);
 }
