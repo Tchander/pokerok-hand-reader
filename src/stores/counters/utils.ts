@@ -12,4 +12,5 @@ export const countersInit: Counters = {
   foldPreFlopThreeBets: 0,
   preFlopSqueeze: 0,
   putIntoPot: 0,
+  numberOfSqueezeSituations: 0,
 };

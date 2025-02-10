@@ -58,6 +58,7 @@ const counters: Counters = {
   foldPreFlopThreeBets: 0,
   preFlopSqueeze: 0,
   putIntoPot: 0,
+  numberOfSqueezeSituations: 0,
 };
 
 export function resetPokerHand() {
@@ -331,7 +332,7 @@ export async function handHandler(hand: string[]) {
   /*** Set Current Players Number ***/
   pokerHand.currentNumberOfPlayers = pokerHand.players.length;
 
-  /*** Set Players Postitions ***/
+  /*** Set Players Positions ***/
   const buttonIndex = positionsInfo.findIndex((player) => player.seat === pokerHand.buttonSeat);
   if (buttonIndex !== -1) {
     const arrAfterIndex = positionsInfo.slice(buttonIndex + 1);
@@ -396,6 +397,7 @@ export async function handHandler(hand: string[]) {
   /*** PreFlop Actions Handler ***/
   let isHeroPutIntoPot: boolean = false;
   let isHeroPreFlopRaiser: boolean = false;
+  let isPreFlopSqueezeSituation: boolean = false;
   let preFlopCallCounter: number = 0;
   let preFlopRaiseCounter: number = 0;
 
@@ -472,6 +474,15 @@ export async function handHandler(hand: string[]) {
         counters.sawShowDownTimes++;
       }
     }
+
+    if (preFlopRaiseCounter === 0 && preFlopCallCounter >= 1) {
+      isPreFlopSqueezeSituation = true;
+    }
+  }
+
+  // Was PreFlop Squeeze situation
+  if (isPreFlopSqueezeSituation) {
+    counters.numberOfSqueezeSituations++;
   }
 
   // Is Hero Put Chips Into Pot
@@ -649,7 +660,6 @@ export async function handHandler(hand: string[]) {
   }
 
   counters.numberOfHands++;
-  console.log(pokerHand);
 }
 
 export async function setStatsAndCounters() {
@@ -659,7 +669,7 @@ export async function setStatsAndCounters() {
 
   if (!storeCounters) return;
 
-  const updatedCounters: Partial<Counters> = {
+  const updatedCounters: Counters = {
     numberOfHands: storeCounters.numberOfHands ? storeCounters.numberOfHands + counters.numberOfHands : counters.numberOfHands,
     sawFlopTimes: storeCounters.sawFlopTimes ? storeCounters.sawFlopTimes + counters.sawFlopTimes : counters.sawFlopTimes,
     sawTurnTimes: storeCounters.sawTurnTimes ? storeCounters.sawTurnTimes + counters.sawTurnTimes : counters.sawTurnTimes,
@@ -671,24 +681,30 @@ export async function setStatsAndCounters() {
     foldPreFlopThreeBets: storeCounters.foldPreFlopThreeBets ? storeCounters.foldPreFlopThreeBets + counters.foldPreFlopThreeBets : counters.foldPreFlopThreeBets,
     preFlopSqueeze: storeCounters.preFlopSqueeze ? storeCounters.preFlopSqueeze + counters.preFlopSqueeze : counters.preFlopSqueeze,
     putIntoPot: storeCounters.putIntoPot ? storeCounters.putIntoPot + counters.putIntoPot : counters.putIntoPot,
+    numberOfSqueezeSituations: storeCounters.numberOfSqueezeSituations ? storeCounters.numberOfSqueezeSituations + counters.numberOfSqueezeSituations : counters.numberOfSqueezeSituations,
   };
 
   await counterStore.updateCounters(updatedCounters);
 
   const statsStore = useStatsStore();
 
-  const stats: Stats = {
-    vpip: 0,
-    pfr: 0,
-    threeBet: 0,
-    wtsd: 0,
-    wmsd: 0,
-    wwsf: 0,
-    foldThreeBet: 0,
-    preFlopSqueeze: 0,
-  };
-
   const storeStats = await statsStore.getStats();
 
-  console.log(storeStats);
+  if (!storeStats) return;
+
+  const updatedStats: Stats = {
+    numberOfHands: updatedCounters.numberOfHands,
+    vpip: updatedCounters.numberOfHands ? updatedCounters.putIntoPot / updatedCounters.numberOfHands * 100 : 0,
+    pfr: updatedCounters.numberOfHands ? updatedCounters.preFlopRaises / updatedCounters.numberOfHands * 100 : 0,
+    threeBet: updatedCounters.numberOfHands ? updatedCounters.preFlopThreeBets / updatedCounters.numberOfHands * 100 : 0,
+    wtsd: updatedCounters.sawFlopTimes ? updatedCounters.sawShowDownTimes / updatedCounters.sawFlopTimes * 100 : 0,
+    wmsd: updatedCounters.sawShowDownTimes ? updatedCounters.wonShowDownTimes / updatedCounters.sawShowDownTimes * 100 : 0,
+    wwsf: updatedCounters.sawFlopTimes ? updatedCounters.wonShowDownTimes / updatedCounters.sawFlopTimes * 100 : 0,
+    foldThreeBetAfterRaising: updatedCounters.preFlopRaises ? updatedCounters.foldPreFlopThreeBets / updatedCounters.preFlopRaises * 100 : 0,
+    preFlopSqueeze: updatedCounters.numberOfSqueezeSituations ? updatedCounters.preFlopSqueeze / updatedCounters.numberOfSqueezeSituations * 100 : 0,
+  };
+
+  await statsStore.updateStats(updatedStats);
+
+  console.log('Данные сохранены в базу');
 }

@@ -10,6 +10,7 @@ export type Counters = {
   foldPreFlopThreeBets: number;
   preFlopSqueeze: number;
   putIntoPot: number;
+  numberOfSqueezeSituations: number;
 };
 
 export type CountersStore = {

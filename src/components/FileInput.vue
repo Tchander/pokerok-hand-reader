@@ -28,6 +28,8 @@ async function onInputChange(event: Event) {
     for (const file of files) {
       readFile(file);
     }
+
+    await setStatsAndCounters();
   } catch (error) {
     console.error(`Ошибка ${error} при открытии базы`);
   }
@@ -63,8 +65,6 @@ function readFile(file: File) {
     if (currentHand.length) {
       await handHandler(currentHand);
     }
-
-    await setStatsAndCounters();
   }
 
   reader.readAsText(file);
