@@ -16,6 +16,7 @@ import FileForm from '@/components/FileForm.vue';
   justify-content: center;
   align-items: center;
   margin: 0 auto;
+  padding: 0 32px;
   min-height: 100dvh;
 }
 </style>

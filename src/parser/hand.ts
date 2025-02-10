@@ -398,6 +398,7 @@ export async function handHandler(hand: string[]) {
   let isHeroPutIntoPot: boolean = false;
   let isHeroPreFlopRaiser: boolean = false;
   let isPreFlopSqueezeSituation: boolean = false;
+  let isRaiseBeforeCall: boolean = false;
   let preFlopCallCounter: number = 0;
   let preFlopRaiseCounter: number = 0;
 
@@ -408,6 +409,10 @@ export async function handHandler(hand: string[]) {
 
     if (action === PlayerAction.RAISE) {
       if (!amount) continue;
+
+      if (preFlopCallCounter === 0) {
+        isRaiseBeforeCall = true;
+      }
 
       if (isHero(id) && !isHeroPreFlopRaiser) {
         counters.preFlopRaises++;
@@ -475,7 +480,7 @@ export async function handHandler(hand: string[]) {
       }
     }
 
-    if (preFlopRaiseCounter === 0 && preFlopCallCounter >= 1) {
+    if ((preFlopRaiseCounter === 0 && preFlopCallCounter >= 1) || (preFlopRaiseCounter === 1 && preFlopCallCounter >= 1 && isRaiseBeforeCall)) {
       isPreFlopSqueezeSituation = true;
     }
   }
