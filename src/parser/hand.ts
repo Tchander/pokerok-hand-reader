@@ -51,7 +51,7 @@ const additionalCounters = {
   preFlopThreeBets: 0,
   foldPreFlopThreeBets: 0,
   preFlopSqueeze: 0,
-  handsPlayed: 0,
+  putIntoPot: 0,
 };
 
 const counters: Counters = {
@@ -81,6 +81,7 @@ export function resetPokerHand() {
 export async function handHandler(hand: string[]) {
   const pokerHand = resetPokerHand();
   let isMoreThanOneBoard: boolean = false;
+  let isHeroWentToShowdown: boolean = false;
   let initInfo: string[] = [];
   let preFlopInfo: string[] = [];
   let flopInfo1: string[] = [];
@@ -407,7 +408,7 @@ export async function handHandler(hand: string[]) {
   setShowdownData(pokerHand, showdownInfo3, 3);
 
   /*** PreFlop Actions Handler ***/
-  let isHeroFoldedOnPreFlop: boolean = false;
+  let isHeroPutIntoPot: boolean = false;
   let isPreFlopRaise: boolean = false;
   let preFlopCallCounter: number = 0;
   let preFlopRaiseCounter: number = 0;
@@ -419,6 +420,10 @@ export async function handHandler(hand: string[]) {
 
     if (action === PlayerAction.RAISE) {
       if (!amount) continue;
+
+      if (isHero(id)) {
+        isHeroPutIntoPot = true;
+      }
 
       if (isHero(id) && preFlopRaiseCounter === 0 && preFlopCallCounter >= 1) {
         additionalCounters.preFlopSqueeze++;
@@ -443,6 +448,10 @@ export async function handHandler(hand: string[]) {
     if (action === PlayerAction.CALL) {
       if (!amount) continue;
 
+      if (isHero(id)) {
+        isHeroPutIntoPot = true;
+      }
+
       pokerHand.potInChips += amount;
       player.moneyInPotInChips += amount;
       player.currentStackInChips -= amount;
@@ -452,10 +461,6 @@ export async function handHandler(hand: string[]) {
     }
 
     if (action === PlayerAction.FOLD) {
-      if (isHero(id)) {
-        isHeroFoldedOnPreFlop = true;
-      }
-
       if (isHero(id) && isPreFlopRaise && preFlopRaiseCounter === 1) {
         additionalCounters.foldPreFlopThreeBets++;
       }
@@ -471,20 +476,19 @@ export async function handHandler(hand: string[]) {
       player.hand = cards;
 
       if (isHero(id)) {
+        isHeroWentToShowdown = true;
+
+        counters.sawFlopTimes++;
+        counters.sawTurnTimes++;
+        counters.sawRiverTimes++;
         counters.sawShowDownTimes++;
       }
     }
   }
 
-  /*** Is Hero Not Folded ***/
-  if (!isHeroFoldedOnPreFlop) {
-    additionalCounters.handsPlayed++;
-  }
-
-  /*** Is Hero Saw Flop ***/
-  const hero = pokerHand.actions.flopActions1.find((el) => isHero(el.id));
-  if (hero) {
-    counters.sawFlopTimes++;
+  // Is Hero Put Chips Into Pot
+  if (isHeroPutIntoPot) {
+    additionalCounters.putIntoPot++;
   }
 
   /*** Flop Actions Handler ***/
@@ -494,11 +498,134 @@ export async function handHandler(hand: string[]) {
     pokerHand.actions.flopActions3,
   ];
 
+  // Is Hero Saw Flop
+  const heroOnFlop = pokerHand.actions.flopActions1.find((el) => isHero(el.id));
+  if (heroOnFlop) {
+    counters.sawFlopTimes++;
+  }
+
   for (const flopAction of flopActions) {
     for (const playerAction of flopAction) {
       const { id, action, amount, cards } = playerAction;
 
       const player = pokerHand.players[ID_INDEX_MAP[id]];
+
+      if (action === PlayerAction.BET || action === PlayerAction.CALL || action === PlayerAction.RAISE) {
+        if (!amount) continue;
+
+        pokerHand.potInChips += amount;
+        player.moneyInPotInChips += amount;
+        player.currentStackInChips -= amount;
+      }
+
+      if (action === PlayerAction.UNCALLED) {
+        if (!amount) continue;
+
+        player.currentStackInChips += amount;
+      }
+
+      if (action === PlayerAction.SHOW) {
+        player.hand = cards;
+
+        if (isHero(id)) {
+          isHeroWentToShowdown = true;
+
+          counters.sawTurnTimes++;
+          counters.sawRiverTimes++;
+          counters.sawShowDownTimes++;
+        }
+      }
+    }
+  }
+
+  /*** Turn Actions Handler ***/
+  const turnActions = [
+    pokerHand.actions.turnActions1,
+    pokerHand.actions.turnActions2,
+    pokerHand.actions.turnActions3,
+  ];
+
+  // Is Hero Saw Turn
+  const heroOnTurn = pokerHand.actions.turnActions1.find((el) => isHero(el.id));
+  if (heroOnTurn) {
+    counters.sawTurnTimes++;
+  }
+
+  for (const turnAction of turnActions) {
+    for (const playerAction of turnAction) {
+      const { id, action, amount, cards } = playerAction;
+
+      const player = pokerHand.players[ID_INDEX_MAP[id]];
+
+      if (action === PlayerAction.BET || action === PlayerAction.CALL || action === PlayerAction.RAISE) {
+        if (!amount) continue;
+
+        pokerHand.potInChips += amount;
+        player.moneyInPotInChips += amount;
+        player.currentStackInChips -= amount;
+      }
+
+      if (action === PlayerAction.UNCALLED) {
+        if (!amount) continue;
+
+        player.currentStackInChips += amount;
+      }
+
+      if (action === PlayerAction.SHOW) {
+        player.hand = cards;
+
+        if (isHero(id)) {
+          isHeroWentToShowdown = true;
+
+          counters.sawRiverTimes++;
+          counters.sawShowDownTimes++;
+        }
+      }
+    }
+  }
+
+  /*** River Actions Handler ***/
+  const riverActions = [
+    pokerHand.actions.riverActions1,
+    pokerHand.actions.riverActions2,
+    pokerHand.actions.riverActions3,
+  ];
+
+  // Is Hero Saw River
+  const heroOnRiver = pokerHand.actions.riverActions1.find((el) => isHero(el.id));
+  if (heroOnRiver) {
+    counters.sawRiverTimes++;
+  }
+
+  for (const riverAction of riverActions) {
+    for (const playerAction of riverAction) {
+      const { id, action, amount, cards } = playerAction;
+
+      const player = pokerHand.players[ID_INDEX_MAP[id]];
+
+      if (action === PlayerAction.BET || action === PlayerAction.CALL || action === PlayerAction.RAISE) {
+        if (!amount) continue;
+
+        pokerHand.potInChips += amount;
+        player.moneyInPotInChips += amount;
+        player.currentStackInChips -= amount;
+      }
+
+      if (action === PlayerAction.UNCALLED) {
+        if (!amount) continue;
+
+        player.currentStackInChips += amount;
+      }
+
+      if (action === PlayerAction.SHOW) {
+        player.hand = cards;
+
+        if (isHero(id)) {
+          isHeroWentToShowdown = true;
+
+          counters.sawShowDownTimes++;
+        }
+      }
     }
   }
 
@@ -508,7 +635,6 @@ export async function handHandler(hand: string[]) {
     pokerHand.actions.showdownActions2,
     pokerHand.actions.showdownActions3,
   ];
-
 
   let wonShowDownTimes = 0;
   for (const showdownAction of showdownActions) {
@@ -522,7 +648,7 @@ export async function handHandler(hand: string[]) {
 
         player.currentStackInChips += amount;
 
-        if (isHero(id)) {
+        if (isHero(id) && isHeroWentToShowdown) {
           wonShowDownTimes++;
         }
       }
@@ -535,7 +661,6 @@ export async function handHandler(hand: string[]) {
   }
 
   counters.numberOfHands++;
-  console.log(additionalCounters);
-  console.log(counters);
+
   console.log(pokerHand);
 }
