@@ -395,7 +395,7 @@ export async function handHandler(hand: string[]) {
 
   /*** PreFlop Actions Handler ***/
   let isHeroPutIntoPot: boolean = false;
-  let isPreFlopRaise: boolean = false;
+  let isHeroPreFlopRaiser: boolean = false;
   let preFlopCallCounter: number = 0;
   let preFlopRaiseCounter: number = 0;
 
@@ -407,18 +407,20 @@ export async function handHandler(hand: string[]) {
     if (action === PlayerAction.RAISE) {
       if (!amount) continue;
 
+      if (isHero(id) && !isHeroPreFlopRaiser) {
+        counters.preFlopRaises++;
+      }
+
       if (isHero(id)) {
         isHeroPutIntoPot = true;
+        isHeroPreFlopRaiser = true;
       }
 
       if (isHero(id) && preFlopRaiseCounter === 0 && preFlopCallCounter >= 1) {
         counters.preFlopSqueeze++;
       }
 
-      if (isHero(id) && preFlopRaiseCounter === 0) {
-        counters.preFlopRaises++;
-        isPreFlopRaise = true;
-      } else if (isHero(id) && preFlopRaiseCounter === 1) {
+      if (isHero(id) && isHeroPreFlopRaiser && preFlopRaiseCounter === 1) {
         counters.preFlopThreeBets++;
       }
 
@@ -447,7 +449,7 @@ export async function handHandler(hand: string[]) {
     }
 
     if (action === PlayerAction.FOLD) {
-      if (isHero(id) && isPreFlopRaise && preFlopRaiseCounter === 1) {
+      if (isHero(id) && isHeroPreFlopRaiser && preFlopRaiseCounter === 1) {
         counters.foldPreFlopThreeBets++;
       }
     }
