@@ -1,10 +1,18 @@
 <template>
-  <form>
-    <input class="file-input" type="file" name="filefield" accept=".txt" multiple @change="onInputChange" />
-  </form>
+  <v-sheet class="mx-auto pa-8" width="600" rounded color="#0c2908">
+    <v-form @submit.prevent>
+      <v-file-input v-model="files" label="Upload hands" variant="outlined" accept=".txt" show-size multiple chips
+        clearable />
+      <v-btn class="mt-4 w-100" type="submit" variant="outlined" size="large" :disabled="!files.length"
+        :loading="isLoading" @click="handleFiles">
+        Submit
+      </v-btn>
+    </v-form>
+  </v-sheet>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
 import { useCountersStore } from '@/stores/counters';
 import { useStatsStore } from '@/stores/stats';
 import { handHandler, setStatsAndCounters } from '@/parser/hand';
@@ -14,26 +22,37 @@ import { KEY_WORDS } from '@/enums/parser';
 const countersStore = useCountersStore();
 const statsStore = useStatsStore();
 
-async function onInputChange(event: Event) {
-  const target = event.target as HTMLInputElement;
+const files = ref<File[]>([]);
+const isLoading = ref(false);
 
-  const files = target.files;
-
-  if (!files) return;
-
+async function openDatabases() {
   try {
     await countersStore.openCountersDatabase();
     await statsStore.openStatsDatabase();
-
-    for (const file of files) {
-      readFile(file);
-    }
-
-    await setStatsAndCounters();
   } catch (error) {
     console.error(`Ошибка ${error} при открытии базы`);
   }
 }
+
+function handleFiles() {
+  isLoading.value = true;
+  for (const file of files.value) {
+    readFile(file);
+  }
+
+  setData();
+  isLoading.value = false;
+  files.value = [];
+}
+
+async function setData() {
+  try {
+    await setStatsAndCounters();
+  } catch (error) {
+    console.error(`Ошибка ${error} при сохранении статистики`);
+  }
+}
+
 
 function readFile(file: File) {
   const reader = new FileReader();
@@ -69,8 +88,8 @@ function readFile(file: File) {
 
   reader.readAsText(file);
 }
+
+openDatabases();
 </script>
 
-<style scoped>
-/* pass */
-</style>
+<style scoped></style>
