@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 import { useCountersStore } from '@/stores/counters';
-import { handHandler } from '@/parser/hand';
+import { handHandler, setStatsAndCounters } from '@/parser/hand';
 import { startsWith } from '@/utils/index.ts';
 import { KEY_WORDS } from '@/enums/parser';
 
@@ -33,29 +33,24 @@ async function onInputChange(event: Event) {
 function readFile(file: File) {
   const reader = new FileReader();
 
-  // Обработка завершения чтения файла
   reader.onload = async function (event: ProgressEvent<FileReader>) {
-    const content = event.target?.result as string | null; // Получаем содержимое файла
+    const content = event.target?.result as string | null;
 
     if (!content) return;
 
-    const lines = content.split('\n').filter(line => line.trim() !== ''); // Разделяем содержимое на строки и удаляем пустые
+    const lines = content.split('\n').filter(line => line.trim() !== '');
 
     let currentHand: string[] = [];
-    let handCounter = 0;
 
     for (const line of lines) {
       if (startsWith(line, KEY_WORDS.POKER_HAND)) {
         if (!currentHand.length) {
           currentHand.push(line);
-          handCounter++;
         } else {
-          // Обработка руки
           await handHandler(currentHand);
 
           currentHand = [];
           currentHand.push(line);
-          handCounter++;
         }
       } else {
         currentHand.push(line);
@@ -66,10 +61,9 @@ function readFile(file: File) {
       await handHandler(currentHand);
     }
 
-    await countersStore.updateNumberOfHands(handCounter);
+    await setStatsAndCounters();
   }
 
-  // Чтение файла как текста
   reader.readAsText(file);
 }
 </script>

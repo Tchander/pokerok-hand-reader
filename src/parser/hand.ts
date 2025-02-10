@@ -15,7 +15,7 @@ import {
   getBoardsAmount,
 } from '@/utils/parser';
 import type { PlayerId, PokerHand, PositionsInfo } from '@/types';
-import type { Counters } from '@/stores/counters';
+import { useCountersStore, type Counters } from '@/stores/counters';
 import type { Stats } from '@/stores/stats';
 
 const defaultPokerHand: PokerHand = {
@@ -46,14 +46,6 @@ const defaultPokerHand: PokerHand = {
   boardsAmount: 1,
 };
 
-const additionalCounters = {
-  preFlopRaises: 0,
-  preFlopThreeBets: 0,
-  foldPreFlopThreeBets: 0,
-  preFlopSqueeze: 0,
-  putIntoPot: 0,
-};
-
 const counters: Counters = {
   numberOfHands: 0,
   sawFlopTimes: 0,
@@ -61,17 +53,11 @@ const counters: Counters = {
   sawRiverTimes: 0,
   sawShowDownTimes: 0,
   wonShowDownTimes: 0,
-};
-
-const stats: Stats = {
-  vpip: 0,
-  pfr: 0,
-  threeBet: 0,
-  wtsd: 0,
-  wmsd: 0,
-  wwsf: 0,
-  foldThreeBet: 0,
+  preFlopRaises: 0,
+  preFlopThreeBets: 0,
+  foldPreFlopThreeBets: 0,
   preFlopSqueeze: 0,
+  putIntoPot: 0,
 };
 
 export function resetPokerHand() {
@@ -426,14 +412,14 @@ export async function handHandler(hand: string[]) {
       }
 
       if (isHero(id) && preFlopRaiseCounter === 0 && preFlopCallCounter >= 1) {
-        additionalCounters.preFlopSqueeze++;
+        counters.preFlopSqueeze++;
       }
 
       if (isHero(id) && preFlopRaiseCounter === 0) {
-        additionalCounters.preFlopRaises++;
+        counters.preFlopRaises++;
         isPreFlopRaise = true;
       } else if (isHero(id) && preFlopRaiseCounter === 1) {
-        additionalCounters.preFlopThreeBets++;
+        counters.preFlopThreeBets++;
       }
 
       pokerHand.potInChips += amount;
@@ -462,7 +448,7 @@ export async function handHandler(hand: string[]) {
 
     if (action === PlayerAction.FOLD) {
       if (isHero(id) && isPreFlopRaise && preFlopRaiseCounter === 1) {
-        additionalCounters.foldPreFlopThreeBets++;
+        counters.foldPreFlopThreeBets++;
       }
     }
 
@@ -488,7 +474,7 @@ export async function handHandler(hand: string[]) {
 
   // Is Hero Put Chips Into Pot
   if (isHeroPutIntoPot) {
-    additionalCounters.putIntoPot++;
+    counters.putIntoPot++;
   }
 
   /*** Flop Actions Handler ***/
@@ -661,6 +647,40 @@ export async function handHandler(hand: string[]) {
   }
 
   counters.numberOfHands++;
-
   console.log(pokerHand);
+}
+
+export async function setStatsAndCounters() {
+  const counterStore = useCountersStore();
+
+  const storeCounters = await counterStore.getCounters();
+
+  if (!storeCounters) return;
+
+  const updatedCounters: Partial<Counters> = {
+    numberOfHands: storeCounters.numberOfHands ? storeCounters.numberOfHands + counters.numberOfHands : counters.numberOfHands,
+    sawFlopTimes: storeCounters.sawFlopTimes ? storeCounters.sawFlopTimes + counters.sawFlopTimes : counters.sawFlopTimes,
+    sawTurnTimes: storeCounters.sawTurnTimes ? storeCounters.sawTurnTimes + counters.sawTurnTimes : counters.sawTurnTimes,
+    sawRiverTimes: storeCounters.sawRiverTimes ? storeCounters.sawRiverTimes + counters.sawRiverTimes : counters.sawRiverTimes,
+    wonShowDownTimes: storeCounters.wonShowDownTimes ? storeCounters.wonShowDownTimes + counters.wonShowDownTimes : counters.wonShowDownTimes,
+    sawShowDownTimes: storeCounters.sawShowDownTimes ? storeCounters.sawShowDownTimes + counters.sawShowDownTimes : counters.sawShowDownTimes,
+    preFlopRaises: storeCounters.preFlopRaises ? storeCounters.preFlopRaises + counters.preFlopRaises : counters.preFlopRaises,
+    preFlopThreeBets: storeCounters.preFlopThreeBets ? storeCounters.preFlopThreeBets + counters.preFlopThreeBets : counters.preFlopThreeBets,
+    foldPreFlopThreeBets: storeCounters.foldPreFlopThreeBets ? storeCounters.foldPreFlopThreeBets + counters.foldPreFlopThreeBets : counters.foldPreFlopThreeBets,
+    preFlopSqueeze: storeCounters.preFlopSqueeze ? storeCounters.preFlopSqueeze + counters.preFlopSqueeze : counters.preFlopSqueeze,
+    putIntoPot: storeCounters.putIntoPot ? storeCounters.putIntoPot + counters.putIntoPot : counters.putIntoPot,
+  };
+
+  const stats: Stats = {
+    vpip: 0,
+    pfr: 0,
+    threeBet: 0,
+    wtsd: 0,
+    wmsd: 0,
+    wwsf: 0,
+    foldThreeBet: 0,
+    preFlopSqueeze: 0,
+  };
+
+  await counterStore.updateCounters(updatedCounters);
 }
