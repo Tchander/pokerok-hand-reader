@@ -469,6 +469,10 @@ export async function handHandler(hand: string[]) {
 
     if (action === PlayerAction.SHOW) {
       player.hand = cards;
+
+      if (isHero(id)) {
+        counters.sawShowDownTimes++;
+      }
     }
   }
 
@@ -483,28 +487,55 @@ export async function handHandler(hand: string[]) {
     counters.sawFlopTimes++;
   }
 
-  // /*** Flop Actions Handler ***/
-  // for (const playerAction of pokerHand.flopActions) {
-  //   const { id, action, amount, cards } = playerAction;
+  /*** Flop Actions Handler ***/
+  const flopActions = [
+    pokerHand.actions.flopActions1,
+    pokerHand.actions.flopActions2,
+    pokerHand.actions.flopActions3,
+  ];
 
-  //   const player = pokerHand.players[ID_INDEX_MAP[id]];
-  // }
+  for (const flopAction of flopActions) {
+    for (const playerAction of flopAction) {
+      const { id, action, amount, cards } = playerAction;
 
-  // /*** Showdown Actions Handler ***/
-  // for (const playerAction of pokerHand.showdownActions) {
-  //   const { id, action, amount } = playerAction;
+      const player = pokerHand.players[ID_INDEX_MAP[id]];
+    }
+  }
 
-  //   const player = pokerHand.players[ID_INDEX_MAP[id]];
+  /*** Showdown Actions Handler ***/
+  const showdownActions = [
+    pokerHand.actions.showdownActions1,
+    pokerHand.actions.showdownActions2,
+    pokerHand.actions.showdownActions3,
+  ];
 
-  //   if (action === PlayerAction.COLLECTED) {
-  //     if (!amount) continue;
 
-  //     player.currentStackInChips += amount;
-  //   }
-  // }
+  let wonShowDownTimes = 0;
+  for (const showdownAction of showdownActions) {
+    for (const playerAction of showdownAction) {
+      const { id, action, amount } = playerAction;
+
+      const player = pokerHand.players[ID_INDEX_MAP[id]];
+
+      if (action === PlayerAction.COLLECTED) {
+        if (!amount) continue;
+
+        player.currentStackInChips += amount;
+
+        if (isHero(id)) {
+          wonShowDownTimes++;
+        }
+      }
+    }
+  }
+
+  // If won showdown 2 of 3 times at least
+  if (wonShowDownTimes / pokerHand.boardsAmount > 0.5) {
+    counters.wonShowDownTimes++;
+  }
 
   counters.numberOfHands++;
-  // console.log(additionalCounters);
-  // console.log(counters);
+  console.log(additionalCounters);
+  console.log(counters);
   console.log(pokerHand);
 }

@@ -26,26 +26,47 @@ export function setMaxNumberOfPlayers(hand: PokerHand, tableType: TableType) {
 }
 
 export function setFlopData(hand: PokerHand, flopInfo: string[], board: number) {
+  const boardsAmount = hand.boardsAmount;
+
   for (let i = 0; i < flopInfo.length; i++) {
     const str = dcr(flopInfo[i]);
 
     if (i === 0) {
-      const { firstCard, secondCard, thirdCard } = getFlopCards(str, hand.boardsAmount > 1);
+      const { firstCard, secondCard, thirdCard } = getFlopCards(str, boardsAmount > 1);
 
       // TODO: докрутить установку карт в борды
       if (board === 1) {
-        hand.boards[0][0] = firstCard;
-        hand.boards[0][1] = secondCard;
-        hand.boards[0][2] = thirdCard;
+        if (boardsAmount >= 1) {
+          hand.boards[0][0] = firstCard;
+          hand.boards[0][1] = secondCard;
+          hand.boards[0][2] = thirdCard;
+        }
+        if (boardsAmount >= 2) {
+          hand.boards[1][0] = firstCard;
+          hand.boards[1][1] = secondCard;
+          hand.boards[1][2] = thirdCard;
+        }
+        if (boardsAmount >= 3) {
+          hand.boards[2][0] = firstCard;
+          hand.boards[2][1] = secondCard;
+          hand.boards[2][2] = thirdCard;
+        }
       }
 
-      if (hand.boardsAmount >= 2 && board === 2) {
-        hand.boards[1][0] = firstCard;
-        hand.boards[1][1] = secondCard;
-        hand.boards[1][2] = thirdCard;
+      if (board === 2) {
+        if (boardsAmount >= 2) {
+          hand.boards[1][0] = firstCard;
+          hand.boards[1][1] = secondCard;
+          hand.boards[1][2] = thirdCard;
+        }
+        if (boardsAmount >= 3) {
+          hand.boards[2][0] = firstCard;
+          hand.boards[2][1] = secondCard;
+          hand.boards[2][2] = thirdCard;
+        }
       }
 
-      if (hand.boardsAmount === 3 && board === 3) {
+      if (board === 3) {
         hand.boards[2][0] = firstCard;
         hand.boards[2][1] = secondCard;
         hand.boards[2][2] = thirdCard;
@@ -58,6 +79,8 @@ export function setFlopData(hand: PokerHand, flopInfo: string[], board: number) 
 }
 
 export function setTurnData(hand: PokerHand, turnInfo: string[], board: number) {
+  const boardsAmount = hand.boardsAmount;
+
   for (let i = 0; i < turnInfo.length; i++) {
     const str = dcr(turnInfo[i]);
 
@@ -65,14 +88,27 @@ export function setTurnData(hand: PokerHand, turnInfo: string[], board: number) 
       const turnCard = getTurnOrRiverCard(str);
 
       if (board === 1) {
-        hand.boards[0][3] = turnCard;
+        if (boardsAmount >= 1) {
+          hand.boards[0][3] = turnCard;
+        }
+        if (boardsAmount >= 2) {
+          hand.boards[1][3] = turnCard;
+        }
+        if (boardsAmount >= 3) {
+          hand.boards[2][3] = turnCard;
+        }
       }
 
-      if (hand.boardsAmount >= 2 && board === 2) {
-        hand.boards[1][3] = turnCard;
+      if (board === 2) {
+        if (boardsAmount >= 2) {
+          hand.boards[1][3] = turnCard;
+        }
+        if (boardsAmount >= 3) {
+          hand.boards[2][3] = turnCard;
+        }
       }
 
-      if (hand.boardsAmount === 3 && board === 3) {
+      if (board === 3) {
         hand.boards[2][3] = turnCard;
       }
     } else {
@@ -83,6 +119,8 @@ export function setTurnData(hand: PokerHand, turnInfo: string[], board: number) 
 }
 
 export function setRiverData(hand: PokerHand, riverInfo: string[], board: number) {
+  const boardsAmount = hand.boardsAmount;
+
   for (let i = 0; i < riverInfo.length; i++) {
     const str = dcr(riverInfo[i]);
 
@@ -90,14 +128,27 @@ export function setRiverData(hand: PokerHand, riverInfo: string[], board: number
       const riverCard = getTurnOrRiverCard(str);
 
       if (board === 1) {
-        hand.boards[0][4] = riverCard;
+        if (boardsAmount >= 1) {
+          hand.boards[0][4] = riverCard;
+        }
+        if (boardsAmount >= 2) {
+          hand.boards[1][4] = riverCard;
+        }
+        if (boardsAmount >= 3) {
+          hand.boards[2][4] = riverCard;
+        }
       }
 
-      if (hand.boardsAmount >= 2 && board === 2) {
-        hand.boards[1][4] = riverCard;
+      if (board === 2) {
+        if (boardsAmount >= 2) {
+          hand.boards[1][4] = riverCard;
+        }
+        if (boardsAmount >= 3) {
+          hand.boards[2][4] = riverCard;
+        }
       }
 
-      if (hand.boardsAmount === 3 && board === 3) {
+      if (board === 3) {
         hand.boards[2][4] = riverCard;
       }
     } else {
