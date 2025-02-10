@@ -8,3 +8,8 @@ export type Stats = {
   foldThreeBet: number;
   preFlopSqueeze: number;
 };
+
+export type StatsStore = {
+  id: string;
+  stats: Partial<Stats>;
+};

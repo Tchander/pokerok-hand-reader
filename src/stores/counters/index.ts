@@ -70,7 +70,7 @@ export const useCountersStore = defineStore(StoreId.COUNTERS, () => {
       const transaction = db.transaction([storeName], 'readwrite');
       const countersStore = transaction.objectStore(storeName);
 
-      const object = {
+      const object: CountersStore = {
         id: countersStoreId,
         counters: structuredClone(countersInit),
       };
@@ -88,23 +88,11 @@ export const useCountersStore = defineStore(StoreId.COUNTERS, () => {
     });
   }
 
-  async function updateNumberOfHands(handCounter: number) {
-    const counters = await getCounters();
-    let numberOfHands: number | undefined = 0;
-
-    if (counters) {
-      numberOfHands = counters.numberOfHands;
-    }
-
-    await updateCounters({ numberOfHands: numberOfHands ? numberOfHands + handCounter : handCounter });
-  }
-
   return {
     openCountersDatabase,
     setInitCounters,
     getCounters,
     updateCounters,
-    updateNumberOfHands,
   };
 });
 

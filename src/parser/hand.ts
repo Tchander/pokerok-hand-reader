@@ -16,7 +16,7 @@ import {
 } from '@/utils/parser';
 import type { PlayerId, PokerHand, PositionsInfo } from '@/types';
 import { useCountersStore, type Counters } from '@/stores/counters';
-import type { Stats } from '@/stores/stats';
+import { useStatsStore, type Stats } from '@/stores/stats';
 
 const defaultPokerHand: PokerHand = {
   sizeOfSB: 0,
@@ -673,6 +673,10 @@ export async function setStatsAndCounters() {
     putIntoPot: storeCounters.putIntoPot ? storeCounters.putIntoPot + counters.putIntoPot : counters.putIntoPot,
   };
 
+  await counterStore.updateCounters(updatedCounters);
+
+  const statsStore = useStatsStore();
+
   const stats: Stats = {
     vpip: 0,
     pfr: 0,
@@ -684,5 +688,7 @@ export async function setStatsAndCounters() {
     preFlopSqueeze: 0,
   };
 
-  await counterStore.updateCounters(updatedCounters);
+  const storeStats = await statsStore.getStats();
+
+  console.log(storeStats);
 }

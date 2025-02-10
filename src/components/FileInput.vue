@@ -6,11 +6,13 @@
 
 <script setup lang="ts">
 import { useCountersStore } from '@/stores/counters';
+import { useStatsStore } from '@/stores/stats';
 import { handHandler, setStatsAndCounters } from '@/parser/hand';
 import { startsWith } from '@/utils/index.ts';
 import { KEY_WORDS } from '@/enums/parser';
 
 const countersStore = useCountersStore();
+const statsStore = useStatsStore();
 
 async function onInputChange(event: Event) {
   const target = event.target as HTMLInputElement;
@@ -21,6 +23,7 @@ async function onInputChange(event: Event) {
 
   try {
     await countersStore.openCountersDatabase();
+    await statsStore.openStatsDatabase();
 
     for (const file of files) {
       readFile(file);
