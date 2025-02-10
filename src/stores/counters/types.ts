@@ -5,6 +5,12 @@ export type Counters = {
   sawRiverTimes: number;
   sawShowDownTimes: number;
   wonShowDownTimes: number;
+  preFlopRaises: number;
+  preFlopThreeBets: number;
+  foldPreFlopThreeBets: number;
+  preFlopSqueeze: number;
+  putIntoPot: number;
+  numberOfSqueezeSituations: number;
 };
 
 export type CountersStore = {

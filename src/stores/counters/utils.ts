@@ -7,4 +7,10 @@ export const countersInit: Counters = {
   sawRiverTimes: 0,
   wonShowDownTimes: 0,
   sawShowDownTimes: 0,
+  preFlopRaises: 0,
+  preFlopThreeBets: 0,
+  foldPreFlopThreeBets: 0,
+  preFlopSqueeze: 0,
+  putIntoPot: 0,
+  numberOfSqueezeSituations: 0,
 };
