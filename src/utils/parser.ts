@@ -14,7 +14,7 @@ export const BOARDS_AMOUNT_MAP: Record<string, BoardsAmount> = {
 };
 
 export function isHero(id: PlayerId) {
-  return id === KEY_WORDS.HERO;
+  return id === KEY_WORDS.HERO as string;
 }
 
 export function getBlinds(arr: string[]): Blinds {
