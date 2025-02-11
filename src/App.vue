@@ -8,6 +8,7 @@
     </v-app-bar>
     <main class="content">
       <FileForm />
+      <ShowStats class="show-stats" />
     </main>
     <v-footer class="footer" color="#0c2908" height="80">
       <v-btn variant="text" append-icon="mdi-github" @click="goToGithubPage">
@@ -19,6 +20,7 @@
 
 <script setup lang="ts">
 import FileForm from '@/components/FileForm.vue';
+import ShowStats from './components/ShowStats.vue';
 
 function goToGithubPage() {
   window.open('https://github.com/Tchander/pokerok-hand-reader', '_blank');
@@ -32,6 +34,10 @@ function goToGithubPage() {
   background-color: #0a100e;
   padding: 160px 32px 40px;
   min-height: 100dvh;
+}
+
+.show-stats {
+  margin-top: 64px;
 }
 
 .footer {

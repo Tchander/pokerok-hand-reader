@@ -1,5 +1,5 @@
 <template>
-  <v-sheet class="mx-auto pa-8" width="600" rounded color="#0c2908">
+  <v-sheet class="mx-auto pa-8 file-form" max-width="600" width="100%" rounded="lg">
     <v-form @submit.prevent>
       <v-file-input v-model="files" label="Upload hands" variant="outlined" accept=".txt" show-size multiple chips
         clearable />
@@ -92,4 +92,10 @@ function readFile(file: File) {
 openDatabases();
 </script>
 
-<style scoped></style>
+<style scoped>
+.file-form {
+  background-color: transparent;
+  color: white;
+  border: 3px solid #0c2908;
+}
+</style>
