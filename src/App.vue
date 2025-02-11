@@ -1,22 +1,42 @@
 <template>
-  <div class="app">
-    <FileForm />
-  </div>
+  <v-app class="app">
+    <v-app-bar color="#0c2908" height="80" absolute>
+      <v-app-bar-title>Poker Hand Reader</v-app-bar-title>
+      <template v-slot:append>
+        <v-btn icon="mdi-github" @click="goToGithubPage" />
+      </template>
+    </v-app-bar>
+    <main class="content">
+      <FileForm />
+    </main>
+    <v-footer class="footer" color="#0c2908" height="80">
+      <v-btn variant="text" append-icon="mdi-github" @click="goToGithubPage">
+        Github Page
+      </v-btn>
+    </v-footer>
+  </v-app>
 </template>
 
 <script setup lang="ts">
 import FileForm from '@/components/FileForm.vue';
+
+function goToGithubPage() {
+  window.open('https://github.com/Tchander/pokerok-hand-reader', '_blank');
+}
 </script>
 
 <style scoped>
-.app {
-  background-color: #0a100e;
+.content {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  margin: 0 auto;
-  padding: 0 32px;
+  background-color: #0a100e;
+  padding: 160px 32px 40px;
   min-height: 100dvh;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>
