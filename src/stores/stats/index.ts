@@ -9,7 +9,7 @@ export const useStatsStore = defineStore(StoreId.STATS, () => {
   const statsStoreId = 'statsId';
   const dbVersion = 1;
 
-  async function getStats(): Promise<Partial<Stats> | null> {
+  async function getStats(): Promise<Stats | null> {
     try {
       const db = await openStatsDatabase();
       const transaction = db.transaction([storeName], 'readwrite');

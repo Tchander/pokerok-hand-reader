@@ -402,6 +402,8 @@ export async function handHandler(hand: string[]) {
   let preFlopCallCounter: number = 0;
   let preFlopRaiseCounter: number = 0;
 
+  // TODO: Что-то не так с подсчётом 3-bet статы, надо поправить
+
   for (const playerAction of pokerHand.actions.preFlopActions) {
     const { id, action, amount, cards } = playerAction;
 
