@@ -11,6 +11,8 @@ export type Counters = {
   preFlopSqueeze: number;
   putIntoPot: number;
   numberOfSqueezeSituations: number;
+  numberOfThreeBetSituations: number;
+  numberOfFoldThreeBetsSituations: number;
 };
 
 export type CountersStore = {

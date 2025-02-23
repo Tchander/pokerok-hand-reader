@@ -7,8 +7,8 @@
       </template>
     </v-app-bar>
     <main class="content">
-      <FileForm />
-      <ShowStats class="show-stats" />
+      <FileForm @update-stats="updateStats" />
+      <ShowStats ref="showStats" class="show-stats" />
     </main>
     <v-footer class="footer" color="#0c2908" height="80">
       <v-btn variant="text" append-icon="mdi-github" @click="goToGithubPage">
@@ -19,11 +19,20 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
 import FileForm from '@/components/FileForm.vue';
 import ShowStats from './components/ShowStats.vue';
 
+const showStats = ref<InstanceType<typeof ShowStats> | null>(null);
+
 function goToGithubPage() {
   window.open('https://github.com/Tchander/pokerok-hand-reader', '_blank');
+}
+
+async function updateStats() {
+  if (showStats.value) {
+    await showStats.value.getStats();
+  }
 }
 </script>
 

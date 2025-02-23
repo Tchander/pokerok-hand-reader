@@ -84,6 +84,10 @@ async function getStats() {
 }
 
 getStats();
+
+defineExpose({
+  getStats,
+});
 </script>
 
 <style scoped>
@@ -125,7 +129,7 @@ getStats();
   }
 
   .additional-stats {
-  grid-template-columns: repeat(1, 1fr);
-}
+    grid-template-columns: repeat(1, 1fr);
+  }
 }
 </style>
