@@ -12,5 +12,5 @@ export type Stats = {
 
 export type StatsStore = {
   id: string;
-  stats: Partial<Stats>;
+  stats: Stats;
 };

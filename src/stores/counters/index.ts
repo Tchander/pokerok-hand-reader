@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { ref } from 'vue';
 import { StoreId } from '../enums';
 import { countersInit } from './utils';
 import type { Counters, CountersStore } from './types';
@@ -9,15 +10,19 @@ export const useCountersStore = defineStore(StoreId.COUNTERS, () => {
   const countersStoreId = 'countersId';
   const dbVersion = 1;
 
+  const counters = ref<Counters>(structuredClone(countersInit));
+
   async function getCounters(): Promise<Partial<Counters> | null> {
     try {
       const db = await openCountersDatabase();
       const transaction = db.transaction([storeName], 'readwrite');
       const countersStore = transaction.objectStore(storeName);
 
-      const { counters } = await requestToPromise<CountersStore>(countersStore.get(countersStoreId));
+      const data = await requestToPromise<CountersStore>(countersStore.get(countersStoreId));
 
-      return counters;
+      if (!data) return null;
+
+      return data.counters;
     } catch (error) {
       console.error('Ошибка получения чартов:', error);
       return null;
@@ -30,11 +35,13 @@ export const useCountersStore = defineStore(StoreId.COUNTERS, () => {
       const transaction = db.transaction([storeName], 'readwrite');
       const countersStore = transaction.objectStore(storeName);
 
-      const { counters } = await requestToPromise<CountersStore>(countersStore.get(countersStoreId));
+      const data = await requestToPromise<CountersStore>(countersStore.get(countersStoreId));
+
+      if (!data) return null;
 
       const updatedCounters: CountersStore = {
         id: countersStoreId,
-        counters: { ...counters, ...updatedData },
+        counters: { ...data.counters, ...updatedData },
       };
 
       await requestToPromise(countersStore.put(updatedCounters));
@@ -81,6 +88,37 @@ export const useCountersStore = defineStore(StoreId.COUNTERS, () => {
     }
   }
 
+  async function setCounters() {
+    const storeCounters = await getCounters();
+
+    if (!storeCounters) return;
+
+    const updatedCounters: Counters = {
+      numberOfHands: storeCounters.numberOfHands ? storeCounters.numberOfHands + counters.value.numberOfHands : counters.value.numberOfHands,
+      sawFlopTimes: storeCounters.sawFlopTimes ? storeCounters.sawFlopTimes + counters.value.sawFlopTimes : counters.value.sawFlopTimes,
+      sawTurnTimes: storeCounters.sawTurnTimes ? storeCounters.sawTurnTimes + counters.value.sawTurnTimes : counters.value.sawTurnTimes,
+      sawRiverTimes: storeCounters.sawRiverTimes ? storeCounters.sawRiverTimes + counters.value.sawRiverTimes : counters.value.sawRiverTimes,
+      wonShowDownTimes: storeCounters.wonShowDownTimes ? storeCounters.wonShowDownTimes + counters.value.wonShowDownTimes : counters.value.wonShowDownTimes,
+      sawShowDownTimes: storeCounters.sawShowDownTimes ? storeCounters.sawShowDownTimes + counters.value.sawShowDownTimes : counters.value.sawShowDownTimes,
+      preFlopRaises: storeCounters.preFlopRaises ? storeCounters.preFlopRaises + counters.value.preFlopRaises : counters.value.preFlopRaises,
+      preFlopThreeBets: storeCounters.preFlopThreeBets ? storeCounters.preFlopThreeBets + counters.value.preFlopThreeBets : counters.value.preFlopThreeBets,
+      foldPreFlopThreeBets: storeCounters.foldPreFlopThreeBets ? storeCounters.foldPreFlopThreeBets + counters.value.foldPreFlopThreeBets : counters.value.foldPreFlopThreeBets,
+      preFlopSqueeze: storeCounters.preFlopSqueeze ? storeCounters.preFlopSqueeze + counters.value.preFlopSqueeze : counters.value.preFlopSqueeze,
+      putIntoPot: storeCounters.putIntoPot ? storeCounters.putIntoPot + counters.value.putIntoPot : counters.value.putIntoPot,
+      numberOfSqueezeSituations: storeCounters.numberOfSqueezeSituations ? storeCounters.numberOfSqueezeSituations + counters.value.numberOfSqueezeSituations : counters.value.numberOfSqueezeSituations,
+      numberOfThreeBetSituations: storeCounters.numberOfThreeBetSituations ? storeCounters.numberOfThreeBetSituations + counters.value.numberOfThreeBetSituations : counters.value.numberOfThreeBetSituations,
+      numberOfFoldThreeBetsSituations: storeCounters.numberOfFoldThreeBetsSituations ? storeCounters.numberOfFoldThreeBetsSituations + counters.value.numberOfFoldThreeBetsSituations : counters.value.numberOfFoldThreeBetsSituations,
+    };
+
+    await updateCounters(updatedCounters);
+
+    return updatedCounters;
+  }
+
+  function resetCounters() {
+    counters.value = structuredClone(countersInit);
+  }
+
   function requestToPromise<T>(request: IDBRequest<T>): Promise<T> {
     return new Promise((resolve, reject) => {
       request.onsuccess = () => resolve(request.result);
@@ -89,10 +127,13 @@ export const useCountersStore = defineStore(StoreId.COUNTERS, () => {
   }
 
   return {
+    counters,
     openCountersDatabase,
     setInitCounters,
     getCounters,
     updateCounters,
+    setCounters,
+    resetCounters,
   };
 });
 
