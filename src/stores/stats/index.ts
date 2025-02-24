@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { StoreId } from '../enums';
 import { statsInit } from './utils';
 import type { Stats, StatsStore } from './types';
+import type { Counters } from '../counters';
 
 export const useStatsStore = defineStore(StoreId.STATS, () => {
   const dbName = 'statsDatabase';
@@ -9,15 +10,17 @@ export const useStatsStore = defineStore(StoreId.STATS, () => {
   const statsStoreId = 'statsId';
   const dbVersion = 1;
 
-  async function getStats(): Promise<Partial<Stats> | null> {
+  async function getStats(): Promise<Stats | null> {
     try {
       const db = await openStatsDatabase();
       const transaction = db.transaction([storeName], 'readwrite');
       const statsStore = transaction.objectStore(storeName);
 
-      const { stats } = await requestToPromise<StatsStore>(statsStore.get(statsStoreId));
+      const data = await requestToPromise<StatsStore>(statsStore.get(statsStoreId));
 
-      return stats;
+      if (!data) return null;
+
+      return data.stats;
     } catch (error) {
       console.error('Ошибка получения чартов:', error);
       return null;
@@ -30,11 +33,13 @@ export const useStatsStore = defineStore(StoreId.STATS, () => {
       const transaction = db.transaction([storeName], 'readwrite');
       const statsStore = transaction.objectStore(storeName);
 
-      const { stats } = await requestToPromise<StatsStore>(statsStore.get(statsStoreId));
+      const data = await requestToPromise<StatsStore>(statsStore.get(statsStoreId));
+
+      if (!data) return null
 
       const updatedStats: StatsStore = {
         id: statsStoreId,
-        stats: { ...stats, ...updatedData },
+        stats: { ...data.stats, ...updatedData },
       };
 
       await requestToPromise(statsStore.put(updatedStats));
@@ -81,6 +86,28 @@ export const useStatsStore = defineStore(StoreId.STATS, () => {
     }
   }
 
+  async function setStats(updatedCounters?: Counters) {
+    if (!updatedCounters) return;
+
+    const storeStats = await getStats();
+
+    if (!storeStats) return;
+
+    const updatedStats: Stats = {
+      numberOfHands: updatedCounters.numberOfHands,
+      vpip: updatedCounters.numberOfHands ? updatedCounters.putIntoPot / updatedCounters.numberOfHands * 100 : 0,
+      pfr: updatedCounters.numberOfHands ? updatedCounters.preFlopRaises / updatedCounters.numberOfHands * 100 : 0,
+      threeBet: updatedCounters.numberOfThreeBetSituations ? updatedCounters.preFlopThreeBets / updatedCounters.numberOfThreeBetSituations * 100 : 0,
+      wtsd: updatedCounters.sawFlopTimes ? updatedCounters.sawShowDownTimes / updatedCounters.sawFlopTimes * 100 : 0,
+      wmsd: updatedCounters.sawShowDownTimes ? updatedCounters.wonShowDownTimes / updatedCounters.sawShowDownTimes * 100 : 0,
+      wwsf: updatedCounters.sawFlopTimes ? updatedCounters.wonShowDownTimes / updatedCounters.sawFlopTimes * 100 : 0,
+      foldThreeBetAfterRaising: updatedCounters.numberOfFoldThreeBetsSituations ? updatedCounters.foldPreFlopThreeBets / updatedCounters.numberOfFoldThreeBetsSituations * 100 : 0,
+      preFlopSqueeze: updatedCounters.numberOfSqueezeSituations ? updatedCounters.preFlopSqueeze / updatedCounters.numberOfSqueezeSituations * 100 : 0,
+    };
+
+    await updateStats(updatedStats);
+  }
+
   function requestToPromise<T>(request: IDBRequest<T>): Promise<T> {
     return new Promise((resolve, reject) => {
       request.onsuccess = () => resolve(request.result);
@@ -93,6 +120,7 @@ export const useStatsStore = defineStore(StoreId.STATS, () => {
     setInitStats,
     getStats,
     updateStats,
+    setStats,
   };
 });
 
