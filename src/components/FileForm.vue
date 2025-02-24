@@ -9,7 +9,7 @@
       </v-btn>
     </v-form>
   </v-sheet>
-  <PhrAlert v-model="showSuccessAlert" type="success" title="Data saved successfully" />
+  <PhrSnackbar v-model="showSuccessAlert" text="Data saved successfully" />
 </template>
 
 <script setup lang="ts">
@@ -19,7 +19,7 @@ import { useStatsStore } from '@/stores/stats';
 import { useHandHandler } from '@/parser/hand';
 import { startsWith } from '@/utils/index.ts';
 import { KEY_WORDS } from '@/enums/parser';
-import PhrAlert from './Ui/PhrAlert.vue';
+import PhrSnackbar from './Ui/PhrSnackbar.vue';
 
 type Emits = {
   updateStats: [],
