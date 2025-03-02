@@ -14,5 +14,5 @@ const props = withDefaults(defineProps<Props>(), {
   color: '#0c2908'
 });
 
-const modelValue = defineModel<boolean | undefined>();
+const modelValue = defineModel<boolean>();
 </script>

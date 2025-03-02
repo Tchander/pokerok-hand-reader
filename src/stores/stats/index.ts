@@ -108,6 +108,28 @@ export const useStatsStore = defineStore(StoreId.STATS, () => {
     await updateStats(updatedStats);
   }
 
+  // TODO: Добавить реактивность после reset для компонента ShowStats
+  async function resetStatsStore(): Promise<void> {
+    try {
+      const db = await openStatsDatabase();
+      const transaction = db.transaction([storeName], 'readwrite');
+      const statsStore = transaction.objectStore(storeName);
+
+      const data = await requestToPromise<StatsStore>(statsStore.get(statsStoreId));
+
+      if (!data) return;
+
+      const resetStats: StatsStore = {
+        id: statsStoreId,
+        stats: structuredClone(statsInit),
+      };
+
+      await requestToPromise(statsStore.put(resetStats));
+    } catch (error) {
+      console.error(`Ошибка ${error} при обнулении стора ${storeName}`);
+    }
+  }
+
   function requestToPromise<T>(request: IDBRequest<T>): Promise<T> {
     return new Promise((resolve, reject) => {
       request.onsuccess = () => resolve(request.result);
@@ -121,6 +143,7 @@ export const useStatsStore = defineStore(StoreId.STATS, () => {
     getStats,
     updateStats,
     setStats,
+    resetStatsStore,
   };
 });
 

@@ -82,9 +82,11 @@ export const useCountersStore = defineStore(StoreId.COUNTERS, () => {
         counters: structuredClone(countersInit),
       };
 
+      console.log(object);
+
       return await requestToPromise(countersStore.add(object));
     } catch (error) {
-      throw Error(`Ошибка ${error} при инициализации стора ${storeName}`);
+      throw Error(`${error} при инициализации стора ${storeName}`);
     }
   }
 
@@ -115,6 +117,29 @@ export const useCountersStore = defineStore(StoreId.COUNTERS, () => {
     return updatedCounters;
   }
 
+  async function resetCountersStore(): Promise<void> {
+    try {
+      const db = await openCountersDatabase();
+      const transaction = db.transaction([storeName], 'readwrite');
+      const countersStore = transaction.objectStore(storeName);
+
+      const data = await requestToPromise<CountersStore>(countersStore.get(countersStoreId));
+
+      if (!data) return;
+
+      const resetCounters: CountersStore = {
+        id: countersStoreId,
+        counters: structuredClone(countersInit),
+      };
+
+      await requestToPromise(countersStore.put(resetCounters));
+
+      counters.value = structuredClone(countersInit);
+    } catch (error) {
+      console.error(`Ошибка ${error} при обнулении стора ${storeName}`);
+    }
+  }
+
   function resetCounters() {
     counters.value = structuredClone(countersInit);
   }
@@ -134,6 +159,7 @@ export const useCountersStore = defineStore(StoreId.COUNTERS, () => {
     updateCounters,
     setCounters,
     resetCounters,
+    resetCountersStore,
   };
 });
 

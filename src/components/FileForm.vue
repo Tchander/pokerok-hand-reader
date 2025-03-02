@@ -1,8 +1,8 @@
 <template>
   <v-sheet class="mx-auto pa-8 file-form" max-width="600" width="100%" rounded="lg">
     <v-form @submit.prevent>
-      <v-file-input v-model="files" label="Upload hands" variant="outlined" accept=".txt" show-size multiple chips
-        clearable />
+      <v-file-input v-model="files as File[]" label="Upload hands" variant="outlined" accept=".txt" show-size multiple
+        chips clearable />
       <v-btn class="mt-4 w-100" type="submit" variant="outlined" size="large" :disabled="!files.length"
         :loading="isLoading" @click="handleFiles">
         Submit
@@ -34,7 +34,7 @@ const statsStore = useStatsStore();
 
 const files = ref<File[]>([]);
 const isLoading = ref(false);
-const showSuccessAlert = ref(false);
+const showSuccessAlert = ref<boolean | undefined>(false);
 
 async function openDatabases() {
   try {

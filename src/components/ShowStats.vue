@@ -8,6 +8,7 @@
     <div class="additional-stats">
       <StatCircular v-for="stat in additionalStats" :key="stat.label" v-bind="stat" />
     </div>
+    <ResetStats />
   </v-sheet>
 </template>
 
@@ -15,6 +16,7 @@
 import { computed, ref } from 'vue';
 import { useStatsStore } from '@/stores/stats';
 import StatCircular from './StatCircular';
+import ResetStats from './ResetStats';
 import type { Stats } from '@/stores/stats';
 import type { StatCircularProps } from './StatCircular';
 
@@ -92,6 +94,7 @@ defineExpose({
 
 <style scoped>
 .show-stats {
+  position: relative;
   background-color: transparent;
   color: white;
   border: 3px solid #0c2908;
